@@ -78,10 +78,11 @@ export const scenarios: Scenario[] = [
         cabin: { width: 1.1, depth: 1.4, height: 2.3 },
         approach: { depth: 1.8, height: 2.4 },
       },
-      flatDoor(0.78, 1.2),
+      { kind: "doorway", name: "Flat door", width: 0.78, height: 2.05 },
     ],
     story: "A 2 m wardrobe goes up to the fifth floor: lobby door, a small lift, then the flat door.",
-    lesson: "One quarter turn before the lift carries it through all three. The lift cabin is checked in the same pose, not just its door.",
+    lesson:
+      "A quarter turn carries it through all three gates, and the lift cabin is checked in the same pose, not just its door. Nobody measured the hall in front of the flat door, so that last turn is shown as an unverified maneuver.",
     expected: "clear",
   },
   {

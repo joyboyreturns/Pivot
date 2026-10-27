@@ -235,6 +235,16 @@ describe("scenario library", () => {
     expect(route.gates[route.firstBlockedIndex]!.plan.reason).toBe("approach");
   });
 
+  it("the lift scenario is clear but admits that the last turn was never measured", () => {
+    const s = scenarioById("elevator-wardrobe")!;
+    const route = planRoute(s.box, s.gates);
+    expect(route.verdict).toBe("clear");
+    expect(route.verified).toBe(false);
+    expect(route.unverifiedSteps).toBeGreaterThan(0);
+    expect(route.gates[0]!.plan.verified).toBe(true);
+    expect(route.gates[2]!.plan.verified).toBe(false);
+  });
+
   it("the widened door scenario is fully verified", () => {
     const s = scenarioById("widened-door")!;
     expect(planRoute(s.box, s.gates).verified).toBe(true);
