@@ -1,0 +1,16 @@
+{
+  "name": "pivot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AR path planner: shows whether a bulky object can get through a doorway, and how to turn it so it does.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
