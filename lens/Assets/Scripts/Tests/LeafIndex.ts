@@ -3,6 +3,11 @@ import { ScenarioMetadata } from "Leaf.lspkg/Scenarios/scenario/ScenarioMetadata
 import { PivotScenario } from "./PivotScenario";
 import { PivotScrubScenario } from "./PivotScrubScenario";
 import { PivotSceneScenario } from "./PivotSceneScenario";
+import { PivotSwitchScenario } from "./PivotSwitchScenario";
+import { PivotGateScenario } from "./PivotGateScenario";
+import { PivotVerifiedScenario } from "./PivotVerifiedScenario";
+import { PivotCornerScenario } from "./PivotCornerScenario";
+import { PivotBoxScenario } from "./PivotBoxScenario";
 
 @component
 export class LeafIndex extends BaseScriptComponent {
@@ -11,5 +16,10 @@ export class LeafIndex extends BaseScriptComponent {
     { id: "pivot-scene", typename: PivotSceneScenario.getTypeName() },
     { id: "pivot-analysis-and-step", typename: PivotScenario.getTypeName() },
     { id: "pivot-scrub", typename: PivotScrubScenario.getTypeName() },
+    { id: "pivot-scenario-switch", typename: PivotSwitchScenario.getTypeName() },
+    { id: "pivot-gate-chips", typename: PivotGateScenario.getTypeName() },
+    { id: "pivot-verified-vs-unverified", typename: PivotVerifiedScenario.getTypeName() },
+    { id: "pivot-corner-turn", typename: PivotCornerScenario.getTypeName() },
+    { id: "pivot-box-and-lift", typename: PivotBoxScenario.getTypeName() },
   ];
 }

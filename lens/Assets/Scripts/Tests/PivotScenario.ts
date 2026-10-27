@@ -1,38 +1,37 @@
 import { Scenario } from "Leaf.lspkg/Scenarios/scenario/Scenario";
 import { expect } from "Leaf.lspkg/Utils/common/Expect";
 import { findSceneObjectByName, sleep } from "Leaf.lspkg/Utils/common/Utils";
-import { findInteractablesByName } from "Leaf.lspkg/Interactors/InteractableUtils";
-import { DefaultLeafInteractor } from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor";
+import { goToScenario, has, sofaRoot, step, textOf } from "./PivotTestUtils";
 
+/** Done criteria 2 and 3: the no-fit result, stepping with the arrow, and the fits result on the next scenario. */
 @component
 export class PivotScenario extends Scenario {
   async run(): Promise<void> {
-    await sleep(2500);
-    const label = findSceneObjectByName("PIVOT No-fit Label").getComponent("Component.Text3D") as Text3D;
-    expect(label.getSceneObject().enabled).toBe(true);
-    expect(label.text.includes("DOES NOT FIT")).toBe(true);
-    const sofa = findSceneObjectByName("Sofa illustration");
+    await sleep(500);
+    await goToScenario(1);
+    const label = findSceneObjectByName("PIVOT No-fit Label");
+    expect(label.enabled).toBe(true);
+    expect(has(textOf("PIVOT No-fit Label"), "DOES NOT FIT")).toBe(true);
+    expect(has(textOf("PIVOT No-fit Label"), "5 CM TOO TIGHT")).toBe(true);
+    expect(has(textOf("Gate Detail Label"), "85 CM")).toBe(true);
+    const sofa = sofaRoot();
     const before = sofa.getTransform().getLocalPosition().z;
-    const arrow = findInteractablesByName("Next step target", undefined, true)[0];
-    if (!arrow) throw new Error("Next step target is unavailable");
-    await new DefaultLeafInteractor().trigger(arrow);
-    await sleep(1500);
+    await step(1);
     expect(sofa.getTransform().getLocalPosition().z < before).toBe(true);
-    const warning = findSceneObjectByName("Unverified Maneuver Label").getComponent("Component.Text3D") as Text3D;
-    expect(warning.text.includes("UNVERIFIED")).toBe(true);
-    const switchDoor = findInteractablesByName("Change doorway target", undefined, true)[0];
-    if (!switchDoor) throw new Error("Change doorway target is unavailable");
-    await new DefaultLeafInteractor().trigger(switchDoor);
-    await sleep(300);
-    expect(label.text.includes("BOX POSE FITS")).toBe(true);
-    expect(label.text.includes("PATH NOT VERIFIED")).toBe(true);
+    expect(has(textOf("Unverified Maneuver Label"), "UNVERIFIED MANEUVER")).toBe(true);
+    expect(has(textOf("Unverified Maneuver Label"), "DOES NOT FIT")).toBe(true);
+
+    await goToScenario(2);
+    expect(has(textOf("PIVOT No-fit Label"), "FITS · 5 CM TO SPARE")).toBe(true);
+    expect(has(textOf("PIVOT No-fit Label"), "ALL STEPS CHECKED")).toBe(true);
+    expect(has(textOf("Route Verdict Label"), "ROUTE CLEAR")).toBe(true);
+    expect(has(textOf("Unverified Maneuver Label"), "EVERY STEP CHECKED")).toBe(true);
     expect(findSceneObjectByName("Doorway left wall").getTransform().getLocalPosition().x).toBeCloseTo(-77.5, 1);
-    await sleep(300);
-    await new DefaultLeafInteractor().trigger(arrow);
-    await sleep(1500);
+    await step(3);
     expect(sofa.getTransform().getLocalRotation().w < 0.99).toBe(true);
-    await new DefaultLeafInteractor().trigger(switchDoor);
-    await sleep(300);
-    expect(label.text.includes("DOES NOT FIT")).toBe(true);
+    expect(has(textOf("Unverified Maneuver Label"), "VERIFIED STEP")).toBe(true);
+    expect(has(textOf("Unverified Maneuver Label"), "UNVERIFIED")).toBe(false);
+    await goToScenario(1);
+    expect(has(textOf("PIVOT No-fit Label"), "DOES NOT FIT")).toBe(true);
   }
 }

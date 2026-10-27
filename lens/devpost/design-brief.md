@@ -4,6 +4,8 @@ status: approved
 
 # Design brief: PIVOT
 
+> **Update (28 Oct 2026).** The original brief below describes the single-doorway demo. PIVOT now plans whole routes: a scenario switcher (pinch *Next scenario*), seven scenarios, gate chips (one per gate of the route, coloured by verdict, diamond on the bottleneck), and four gate types (doorway, corridor, lift, L-shaped corner) drawn at real scale. Sections below still hold, with these changes: the doorway is no longer fixed at 80 cm, the dimension labels follow the selected gate, the result states the verdict of the selected gate and the route, and the **Unverified maneuver** label is per step: "Verified step" appears only when that step was checked against the room in front of the gate; every no-fit illustration and every step without a measured approach stays "Unverified maneuver". Green is shown only for evaluated gate clearance. The out-of-scope list loses "hallway turns" and "changing dimensions" (both done); stairs, wall thickness and room scanning stay out.
+
 ## The one spatial moment
 A person approaches a narrow doorway with a large sofa and sees, at real scale, why PIVOT cannot find a valid fixed orientation under its current box-model constraints. They can step or scrub through a smooth, explicitly unverified illustrative maneuver to understand the spatial problem.
 

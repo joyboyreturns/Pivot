@@ -28,15 +28,21 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    boxMesh: false
     doorDimensions: false
     doorLeft: false
+    doorLintel: false
     doorRight: false
+    ghostPanelMaterial: false
+    glowMaterial: false
     restrictionLeft: false
     restrictionRight: false
     result: false
     scan: false
+    startScenario: false
     switchDoor: false
     switchVisual: false
+    wallMaterial: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -52,9 +58,15 @@
       restrictionRight: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       doorLeft: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       doorRight: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      doorLintel: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       doorDimensions: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
       switchDoor: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
       switchVisual: !<reference.RenderMeshVisual> 00000000-0000-0000-0000-000000000000
+      boxMesh: !<reference.RenderMesh> 00000000-0000-0000-0000-000000000000
+      wallMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      glowMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      ghostPanelMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      startScenario: !<float> 0.000000
   ScriptTypes:
     -
       {}
@@ -65,6 +77,12 @@
     - // @input SceneObject restrictionRight
     - // @input SceneObject doorLeft
     - // @input SceneObject doorRight
+    - // @input SceneObject doorLintel
     - // @input Component.Text3D doorDimensions
     - // @input AssignableType_1 switchDoor
     - // @input Component.RenderMeshVisual switchVisual
+    - // @input Asset.RenderMesh boxMesh
+    - // @input Asset.Material wallMaterial
+    - // @input Asset.Material glowMaterial
+    - // @input Asset.Material ghostPanelMaterial
+    - // @input float startScenario

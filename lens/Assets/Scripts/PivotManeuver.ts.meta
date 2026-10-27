@@ -31,6 +31,7 @@
     analysis: false
     arrow: false
     arrowVisual: false
+    boxMesh: false
     doorDimensions: false
     ghostMaterial: false
     handleVisual: false
@@ -38,6 +39,8 @@
     sofa: false
     sofaDimensions: false
     sofaVisual: false
+    solidMaterial: false
+    warning: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -56,6 +59,9 @@
       doorDimensions: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
       sofaVisual: !<reference.RenderMeshVisual> 00000000-0000-0000-0000-000000000000
       ghostMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      solidMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      boxMesh: !<reference.RenderMesh> 00000000-0000-0000-0000-000000000000
+      warning: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
       analysis: !<MappingBased.AssignableType_3> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
@@ -70,4 +76,7 @@
     - // @input SceneObject doorDimensions
     - // @input Component.RenderMeshVisual sofaVisual
     - // @input Asset.Material ghostMaterial
+    - // @input Asset.Material solidMaterial
+    - // @input Asset.RenderMesh boxMesh
+    - // @input Component.Text3D warning
     - // @input AssignableType_3 analysis
