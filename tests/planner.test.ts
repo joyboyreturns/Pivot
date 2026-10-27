@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clearance, planMove, silhouette } from "../src/planner";
+import { clearance, doorways, furniture, planMove, silhouette } from "../src/planner";
 
 const sofa = { length: 2.0, height: 0.85, depth: 0.9 };
 
@@ -60,5 +60,32 @@ describe("planMove determinism", () => {
     const plan = planMove({ length: 0.5, height: 0.5, depth: 0.5 }, { width: 0.9, height: 2.0 });
     expect(plan.fits).toBe(true);
     expect(plan.steps.map((s) => s.kind)).toEqual(["start", "slide", "pass"]);
+  });
+});
+
+describe("furniture fixtures", () => {
+  it("a fridge fits a standard door upright", () => {
+    const plan = planMove(furniture.fridge!, doorways.standard!);
+    expect(plan.fits).toBe(true);
+  });
+
+  it("a 3-seater sofa cannot pass a narrow door", () => {
+    expect(planMove(furniture.sofa3Seater!, doorways.narrow!).fits).toBe(false);
+  });
+
+  it("every fixture fits the double door", () => {
+    for (const box of Object.values(furniture)) expect(planMove(box, doorways.double!).fits).toBe(true);
+  });
+});
+
+describe("fine search", () => {
+  it("never does worse than the coarse search and never changes who fits", () => {
+    for (const box of Object.values(furniture))
+      for (const door of Object.values(doorways)) {
+        const coarse = planMove(box, door, { fineStepDegrees: 0 });
+        const fine = planMove(box, door);
+        expect(fine.clearance).toBeGreaterThanOrEqual(coarse.clearance - 1e-9);
+        if (coarse.fits) expect(fine.fits).toBe(true);
+      }
   });
 });

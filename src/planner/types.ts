@@ -47,6 +47,8 @@ export interface Plan {
 export interface PlanOptions {
   /** Search resolution for each rotation axis. Default 15. */
   stepDegrees?: number;
+  /** Finer search around the best pose when no pose is comfortable (tight doors). 0 disables. Default 5. */
+  fineStepDegrees?: number;
   /** Clearance (m) considered comfortable; poses above it are ranked by least rotation. Default 0.02. */
   comfortableClearance?: number;
 }

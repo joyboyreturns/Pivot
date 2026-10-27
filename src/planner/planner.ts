@@ -11,7 +11,7 @@ const effort = (p: Pose) => p.pitch + p.yaw + p.roll;
  * least rotation wins; if none is comfortable, the one with the most clearance
  * that still fits; otherwise nothing fits.
  */
-function choosePose(box: Box, door: Doorway, step: number, comfortable: number): { pose: Pose; clearance: number } {
+function choosePose(box: Box, door: Doorway, step: number, comfortable: number, fine: number): { pose: Pose; clearance: number } {
   let comfy: { pose: Pose; clearance: number } | null = null;
   let best: { pose: Pose; clearance: number } = { pose: UPRIGHT, clearance: clearance(box, door, UPRIGHT) };
 
@@ -27,7 +27,21 @@ function choosePose(box: Box, door: Doorway, step: number, comfortable: number):
         // Least rotation wins; at equal rotation, the roomier pose wins.
         if (!comfy || dEffort < -EPS || (Math.abs(dEffort) <= EPS && c > comfy.clearance + EPS)) comfy = { pose, clearance: c };
       }
-  return comfy ?? best;
+  return comfy ?? refine(box, door, best, step, fine);
+}
+
+/** Tight doors: search around the best coarse pose in finer increments for a few more cm. */
+function refine(box: Box, door: Doorway, start: { pose: Pose; clearance: number }, span: number, fine: number) {
+  if (fine <= 0 || fine >= span) return start;
+  let best = start;
+  for (let dp = -span; dp <= span; dp += fine)
+    for (let dy = -span; dy <= span; dy += fine)
+      for (let dr = -span; dr <= span; dr += fine) {
+        const pose = { pitch: start.pose.pitch + dp, yaw: start.pose.yaw + dy, roll: start.pose.roll + dr };
+        const c = clearance(box, door, pose);
+        if (c > best.clearance + EPS) best = { pose, clearance: c };
+      }
+  return best;
 }
 
 function hint(pose: Pose): string {
@@ -41,8 +55,8 @@ function hint(pose: Pose): string {
 
 /** Plan how to carry `box` through `door`. Pure and deterministic. */
 export function planMove(box: Box, door: Doorway, options: PlanOptions = {}): Plan {
-  const { stepDegrees = 15, comfortableClearance = 0.02 } = options;
-  const { pose, clearance: c } = choosePose(box, door, stepDegrees, comfortableClearance);
+  const { stepDegrees = 15, comfortableClearance = 0.02, fineStepDegrees = 5 } = options;
+  const { pose, clearance: c } = choosePose(box, door, stepDegrees, comfortableClearance, fineStepDegrees);
 
   if (c < -EPS) {
     return { fits: false, steps: [], bottleneckIndex: -1, clearance: c };

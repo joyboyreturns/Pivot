@@ -13,10 +13,10 @@ Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is 
 
 ## Step 2: Planner core (29-31 Oct)
 
-- [ ] Review the v1 model against real furniture sizes; add fixtures
+- [x] Review the v1 model against real furniture sizes; add fixtures
 - [ ] Add approach clearance (hallway width) so `tilt` and `rotate` steps can also be constrained
-- [ ] Consider a finer search around the best pose (5 degrees) for tight doors
-- [ ] Sync script: copy `src/planner/*.ts` into the Lens project's assets
+- [x] Finer search (5 degrees) around the best pose for tight doors
+- [x] Sync script: `npm run sync` copies `src/planner/*.ts` into `lens/Assets/Planner`
 - Done when: tests pass on 3 door sizes and the planner runs inside Lens Studio.
 
 ## Step 3: Lens experience (1-3 Nov)
