@@ -22,20 +22,28 @@ export function rotationMatrix(p: Pose): Mat3 {
   return mul(rz, mul(ry, rx));
 }
 
+/** Axis-aligned extent of the posed box along world x (across the wall), y (up) and z (the carry direction). */
+export function extents(box: Box, pose: Pose): { x: number; y: number; z: number } {
+  const m = rotationMatrix(pose);
+  const dims = [box.length, box.height, box.depth];
+  let x = 0;
+  let y = 0;
+  let z = 0;
+  for (let i = 0; i < 3; i++) {
+    x += Math.abs(m[i]!) * dims[i]!;
+    y += Math.abs(m[3 + i]!) * dims[i]!;
+    z += Math.abs(m[6 + i]!) * dims[i]!;
+  }
+  return { x, y, z };
+}
+
 /**
  * Extent of the box's silhouette along the door's width (x) and height (y) axes
  * when carried through along z in the given pose.
  */
 export function silhouette(box: Box, pose: Pose): { width: number; height: number } {
-  const m = rotationMatrix(pose);
-  const dims = [box.length, box.height, box.depth];
-  let width = 0;
-  let height = 0;
-  for (let i = 0; i < 3; i++) {
-    width += Math.abs(m[i]!) * dims[i]!; // row 0: x
-    height += Math.abs(m[3 + i]!) * dims[i]!; // row 1: y
-  }
-  return { width, height };
+  const e = extents(box, pose);
+  return { width: e.x, height: e.y };
 }
 
 /** Spare room in the tightest axis; negative means it does not fit. */

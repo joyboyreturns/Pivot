@@ -1,3 +1,14 @@
 export * from "./types";
-export { silhouette, clearance, rotationMatrix } from "./geometry";
-export { planMove } from "./planner";
+export { silhouette, clearance, rotationMatrix, extents } from "./geometry";
+export { planMove, planGate, APPROACH_Z, SLIDE_Z, PASS_Z } from "./planner";
+export { gateClearance, sweepChain, sweepSegment, rotationChain } from "./gates";
+export { solveCorner, cornerCentre } from "./corner";
+export { planRoute } from "./route";
+export { minDoorwayWidth, minCornerWidth, fitMatrix } from "./inverse";
+export type { FitRow, FitCell, MinimumWidth } from "./inverse";
+export { frameAt, attemptFrame, maxProgress } from "./choreography";
+export type { Frame } from "./choreography";
+export { scenarios, scenarioById } from "./scenarios";
+export type { Scenario } from "./scenarios";
+export { describeGate, describePlan, formatRoute, formatScenario, formatFitMatrix } from "./report";
+export { furniture, doorways, routes } from "./fixtures";
