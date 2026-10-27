@@ -48,3 +48,17 @@ export function has(text: string, part: string): boolean {
 export function check(condition: boolean, what: string, seen?: string): void {
   if (!condition) throw new Error("CHECK FAILED: " + what + (seen !== undefined ? " (saw: " + seen.replace(/\n/g, " | ") + ")" : ""));
 }
+
+/** Switch between the move-table model and life size (the tests that measure real centimetres use life size). */
+export async function setLifeSize(on: boolean): Promise<void> {
+  const isLife = textOf("Size label").indexOf("MODEL") === 0;
+  if (isLife !== on) {
+    await tap("Size target");
+    await sleep(400);
+  }
+}
+
+/** Offset of an object from the wearer's eye (the world origin), in cm. */
+export function fromEye(name: string): vec3 {
+  return findSceneObjectByName(name).getTransform().getWorldPosition();
+}

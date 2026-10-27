@@ -12,7 +12,7 @@ export { scenarios, scenarioById } from "./scenarios";
 export type { Scenario } from "./scenarios";
 export { describeGate, describePlan, formatRoute, formatScenario, formatFitMatrix } from "./report";
 export { furniture, doorways, routes } from "./fixtures";
-export { boxParams, withBoxParam, gateParams, withGateParam, defaultGate, nextGate, GATE_KINDS } from "./builder";
+export { boxParams, withBoxParam, gateParams, withGateParam, defaultGate, nextGate, applyFix, GATE_KINDS } from "./builder";
 export { objectLibrary, placeLibrary, customScenario } from "./library";
 export type { ObjectPreset, PlacePreset } from "./library";
 export { suggestFixes, maxScale } from "./fixes";

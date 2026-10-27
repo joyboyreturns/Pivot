@@ -20,6 +20,14 @@ Built for the Learn AR with SPECS challenge.
 
 ## In the Lens (Lens Studio 5.23, Interactive Preview)
 
+PIVOT is designed to the SPECS design habits, not as a screen in the air:
+
+- **A move table, not a wall of text.** The room is a 1:10 model on a table about 1.1 m ahead and a little below eye level, inside the glasses' narrow field of view. Pinch **Life size** for the real 1:1 room.
+- **Numbers sit on the thing they describe.** Dimension lines at the gap where the object passes, with the clearance beside them; the step label rides on the ghost; the tightest moment of the move is tinted in the trail.
+- **The whole move at once.** A seven-frame ghost trail shows the path, and the ghost replays it by itself.
+- **Try the fix.** Blocked? Two tags on the model say what would fix it ("Widen to 85 cm", "5 cm lower"). Pinch one and the whole route re-plans with the change.
+- **Few big targets.** Next scenario, Your move, Life size, the next-step arrow and the scrub rail; the route is three tokens along the table edge.
+
 - Pinch **Next scenario** to cycle scenarios, or pinch **Your move** for the sandbox: **Next object**, **Next place**, **+ Gate**, **– Gate**, and a **–/+** stepper for every size (one tap is 1 cm, quick repeats 5 cm). Pinch the **Object** chip to edit the object, a gate chip to edit that gate. A hall depth of 0 means "not measured", and the turn is then shown as unverified.
 - Pinch a **gate chip** to look at one gate of the route; the chip colour and the diamond show the verdict and the bottleneck.
 - After the analysis scan the ghost plays the maneuver by itself; pinch the **arrow** to step it or drag the **rail** to scrub, and your first touch takes over.
@@ -31,7 +39,7 @@ No SPECS device was available. Everything was run in Interactive Preview with mo
 
 ## Status
 
-Planner core and Lens experience working. 78 Vitest tests (`npm test`) and 10 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 79 Vitest tests (`npm test`) and 11 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

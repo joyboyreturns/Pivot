@@ -1,4 +1,4 @@
-import type { Box, CornerGate, CorridorGate, DoorwayGate, ElevatorGate, Gate, GateKind, Param } from "./types";
+import type { Box, CornerGate, Fix, CorridorGate, DoorwayGate, ElevatorGate, Gate, GateKind, Param } from "./types";
 
 const round = (v: number) => Math.round(v * 100) / 100;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -127,4 +127,15 @@ const NAMES: Record<GateKind, string> = { doorway: "Door", corridor: "Corridor",
 export function nextGate(existing: Gate[]): Gate {
   const kind = GATE_KINDS[existing.length % GATE_KINDS.length]!;
   return defaultGate(kind, `${NAMES[kind]} ${existing.length + 1}`);
+}
+
+/** The object and gate with a suggested fix applied, ready to be planned again. */
+export function applyFix(box: Box, gate: Gate, fix: Fix): { box: Box; gate: Gate } {
+  let b = box;
+  let g = gate;
+  for (const c of fix.changes) {
+    if (c.scope === "box") b = withBoxParam(b, c.id, c.value);
+    else g = withGateParam(g, c.id, c.value);
+  }
+  return { box: b, gate: g };
 }

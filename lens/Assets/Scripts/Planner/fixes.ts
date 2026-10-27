@@ -1,6 +1,6 @@
 import { withBoxParam, withGateParam } from "./builder";
 import { planGate } from "./planner";
-import type { Box, Fix, Gate, PlanOptions } from "./types";
+import type { Box, Fix, FixChange, Gate, PlanOptions } from "./types";
 
 const QUICK: PlanOptions = { stepDegrees: 30, fineStepDegrees: 0 };
 const cm = (m: number) => `${Math.round(m * 100)} cm`;
@@ -49,32 +49,33 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
     return to === null || to <= from + 1e-9 ? null : { to, gate: withGateParam(g, id, to) };
   };
 
-  const push = (kind: Fix["kind"], target: string, from: number, to: number, label: string) =>
-    out.push({ kind, target, from, to, delta: Math.round((to - from) * 100) / 100, label });
+  const push = (kind: Fix["kind"], target: string, from: number, to: number, label: string, short: string, changes: FixChange[]) =>
+    out.push({ kind, target, from, to, delta: Math.round((to - from) * 100) / 100, label, short, changes });
+  const gateChange = (id: string, value: number): FixChange => ({ scope: "gate", id, value });
 
   /** Widen an opening, and if the room in front is still too shallow for the turn, ask for that as well. */
   const openingFix = (id: string, noun: string, limitGrow: number) => {
     const from = readParam(gate, id)!;
     const alone = gateFix(gate, id, limitGrow, { ...options, approach: null });
-    if (alone) push("widen", `${gate.name} ${noun}`, from, alone.to, `Widen the ${gate.name} ${noun} to ${cm(alone.to)} (+${cm(alone.to - from)})`);
+    if (alone) push("widen", `${gate.name} ${noun}`, from, alone.to, `Widen the ${gate.name} ${noun} to ${cm(alone.to)} (+${cm(alone.to - from)})`, `Widen to ${cm(alone.to)}`, [gateChange(id, alone.to)]);
     const after = alone ? alone.gate : gate;
     if (!fits(box, after, options) && planGate(box, after, options).reason === "approach") {
       const depth = gateFix(after, "hallDepth", 3, options);
       const was = readParam(after, "hallDepth") ?? 0;
-      if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `Give it ${cm(depth.to)} of room in front of the ${gate.name} (now ${cm(was)})`);
+      if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `Give it ${cm(depth.to)} of room in front of the ${gate.name} (now ${cm(was)})`, `Hall to ${cm(depth.to)}`, [...(alone ? [gateChange(id, alone.to)] : []), gateChange("hallDepth", depth.to)]);
     }
   };
 
   if (base.reason === "approach") {
     const depth = gateFix(gate, "hallDepth", 3, options);
     const was = readParam(gate, "hallDepth") ?? 0;
-    if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `Give it ${cm(depth.to)} of room in front of the ${gate.name} (now ${cm(was)})`);
+    if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `Give it ${cm(depth.to)} of room in front of the ${gate.name} (now ${cm(was)})`, `Hall to ${cm(depth.to)}`, [gateChange("hallDepth", depth.to)]);
   } else if (gate.kind === "doorway" || gate.kind === "corridor") {
     openingFix("width", "width", 1.5);
   } else if (gate.kind === "elevator") {
     openingFix("doorWidth", "door", 1);
     const alone = gateFix(gate, "cabinDepth", 1.5, { ...options, approach: null });
-    if (alone) push("widen", `${gate.name} cabin depth`, gate.cabin.depth, alone.to, `Widen the ${gate.name} cabin depth to ${cm(alone.to)} (+${cm(alone.to - gate.cabin.depth)})`);
+    if (alone) push("widen", `${gate.name} cabin depth`, gate.cabin.depth, alone.to, `Widen the ${gate.name} cabin depth to ${cm(alone.to)} (+${cm(alone.to - gate.cabin.depth)})`, `Cabin to ${cm(alone.to)}`, [gateChange("cabinDepth", alone.to)]);
   } else {
     // An L-turn: widen both halls together.
     const from = Math.min(gate.inWidth, gate.outWidth);
@@ -83,7 +84,16 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
     const to = smallest(from, from + 2, (x) => widen(x, QUICK), (x) => widen(x));
     if (to !== null && to > from) {
       const delta = Math.round((to - from) * 100) / 100;
-      out.push({ kind: "widen", target: `${gate.name} halls`, from, to, delta, label: `Widen both halls by ${cm(delta)} (to ${cm(gate.inWidth + delta)} and ${cm(gate.outWidth + delta)})` });
+      out.push({
+        kind: "widen",
+        target: `${gate.name} halls`,
+        from,
+        to,
+        delta,
+        label: `Widen both halls by ${cm(delta)} (to ${cm(gate.inWidth + delta)} and ${cm(gate.outWidth + delta)})`,
+        short: `Halls +${cm(delta)}`,
+        changes: [gateChange("inWidth", gate.inWidth + delta), gateChange("outWidth", gate.outWidth + delta)],
+      });
     }
   }
 
@@ -95,7 +105,16 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
     const delta = Math.round((dim - to) * 100) / 100;
     if (delta > 0.25) continue; // anything bigger is no longer the same object
     const w = WORDS[id]!;
-    out.push({ kind: "shrink", target: id, from: dim, to, delta, label: `Make it ${cm(delta)} ${w.noun} (${w.hint})` });
+    out.push({
+      kind: "shrink",
+      target: id,
+      from: dim,
+      to,
+      delta,
+      label: `Make it ${cm(delta)} ${w.noun} (${w.hint})`,
+      short: `${cm(delta)} ${w.noun}`,
+      changes: [{ scope: "box", id, value: to }],
+    });
   }
   return out.sort((a, b) => a.delta - b.delta);
 }

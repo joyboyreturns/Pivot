@@ -41,6 +41,13 @@ Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.c
 - [x] *Your move* mode in the Lens: Next object, Next place, + Gate, - Gate, steppers on every parameter
 - [x] LEAF scenario for the sandbox
 
+## Step 3c: The move table (design-rules overhaul) - done in Preview
+
+- [x] Room as a 1:10 model on a table 1.1 m ahead, life-size toggle
+- [x] Numbers on the thing: dimension lines at the gap, step label on the ghost, trail of the whole move
+- [x] Fix tags you can pinch to try the fix
+- [x] Controls cut to a few large targets; placement numbers in one file and tested
+
 ## Step 4: Polish (4-6 Nov)
 
 - [x] Walk-around check with the preview camera (orbit), L-turn framing, text stack, switch size, long titles

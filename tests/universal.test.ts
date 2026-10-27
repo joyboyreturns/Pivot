@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyFix,
   boxParams,
   customScenario,
   defaultGate,
@@ -11,6 +12,7 @@ import {
   planGate,
   planRoute,
   scenarioById,
+  scenarios,
   suggestFixes,
   withBoxParam,
   withGateParam,
@@ -146,6 +148,24 @@ describe("what would make it fit", () => {
     expect(widen.delta).toBeGreaterThan(0.1);
     const grown = { ...corner, inWidth: 1.1 + widen.delta, outWidth: 1.1 + widen.delta };
     expect(planGate(sofa, grown).fits).toBe(true);
+  });
+});
+
+describe("trying a fix", () => {
+  it("applying any suggested fix to a blocked gate makes it fit", () => {
+    let tried = 0;
+    for (const s of scenarios) {
+      for (const gate of s.gates) {
+        if (planGate(s.box, gate).fits) continue;
+        for (const fix of suggestFixes(s.box, gate)) {
+          const after = applyFix(s.box, gate, fix);
+          expect(planGate(after.box, after.gate).fits, `${s.id}: ${fix.label}`).toBe(true);
+          expect(fix.short.length).toBeGreaterThan(3);
+          tried++;
+        }
+      }
+    }
+    expect(tried).toBeGreaterThanOrEqual(5);
   });
 });
 

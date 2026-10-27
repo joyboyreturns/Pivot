@@ -2,6 +2,8 @@ import { TapInteraction } from "./TapInteraction";
 import { DragInteraction } from "./DragInteraction";
 import { PivotAnalysis } from "./PivotAnalysis";
 import { extents, frameAt, maxProgress } from "./Planner/index";
+import { poseTransform } from "./PivotPose";
+import { ARROW_AT, RAIL_AT, RAIL_HALF } from "./PivotLayout";
 import type { Frame, Plan } from "./Planner/index";
 
 const CM = 100;
@@ -162,13 +164,9 @@ export class PivotManeuver extends BaseScriptComponent {
 
   private place(frame: Frame): void {
     const t = this.sofa.getTransform();
-    const box = this.analysis.scenario.box;
-    const height = extents(box, frame.pose).y;
-    t.setLocalPosition(new vec3(frame.position.x * CM, height * CM / 2 + frame.position.y * CM, frame.position.z * CM));
-    const rx = quat.angleAxis(frame.pose.pitch * RAD, vec3.right());
-    const ry = quat.angleAxis(frame.pose.yaw * RAD, vec3.up());
-    const rz = quat.angleAxis(frame.pose.roll * RAD, vec3.forward());
-    t.setLocalRotation(rz.multiply(ry).multiply(rx));
+    const pose = poseTransform(this.analysis.scenario.box, frame);
+    t.setLocalPosition(pose.position);
+    t.setLocalRotation(pose.rotation);
   }
 
   onAwake(): void {
@@ -199,6 +197,11 @@ export class PivotManeuver extends BaseScriptComponent {
       this.handleMaterial = handleMesh.mainMaterial.clone();
       arrowMesh.mainMaterial = this.arrowMaterial;
       handleMesh.mainMaterial = this.handleMaterial;
+      // The controls sit on the front edge of the move table.
+      this.arrow.getSceneObject().getTransform().setLocalPosition(ARROW_AT());
+      this.scrubber.getSceneObject().getTransform().setLocalPosition(RAIL_AT());
+      this.arrowVisual.getTransform().setLocalScale(new vec3(5, 5, 5));
+      this.handleVisual.getTransform().setLocalScale(new vec3(3, 3, 3));
       const rail = this.scrubber.getSceneObject().getTransform().getLocalPosition();
       this.railCenterX = rail.x;
       this.railY = rail.y;
@@ -213,18 +216,18 @@ export class PivotManeuver extends BaseScriptComponent {
         }
         this.target = Math.min(limit, (Math.floor(this.target * count + 0.001) + 1) / count);
       });
-      this.arrow.onHoverStart.add(() => { this.arrowVisual.getTransform().setLocalScale(new vec3(21, 21, 21)); this.arrowMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
-      this.arrow.onHoverEnd.add(() => { this.arrowVisual.getTransform().setLocalScale(new vec3(16, 16, 16)); this.arrowMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
+      this.arrow.onHoverStart.add(() => { this.arrowVisual.getTransform().setLocalScale(new vec3(6.5, 6.5, 6.5)); this.arrowMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
+      this.arrow.onHoverEnd.add(() => { this.arrowVisual.getTransform().setLocalScale(new vec3(5, 5, 5)); this.arrowMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
       this.scrubber.onHoverStart.add(() => { this.handleMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
       this.scrubber.onHoverEnd.add(() => { this.handleMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
-      this.scrubber.onDragStart.add(() => { this.touched = true; this.dragging = true; this.handleVisual.getTransform().setLocalScale(new vec3(14, 14, 14)); });
-      this.scrubber.onDragEnd.add(() => { this.dragging = false; this.handleVisual.getTransform().setLocalScale(new vec3(10, 10, 10)); });
+      this.scrubber.onDragStart.add(() => { this.touched = true; this.dragging = true; this.handleVisual.getTransform().setLocalScale(new vec3(4.2, 4.2, 4.2)); });
+      this.scrubber.onDragEnd.add(() => { this.dragging = false; this.handleVisual.getTransform().setLocalScale(new vec3(3, 3, 3)); });
       this.scrubber.onDragUpdate.add(() => {
         const t = this.scrubber.getSceneObject().getTransform();
         const q = t.getLocalPosition();
-        const x = Math.max(this.railCenterX - 30, Math.min(this.railCenterX + 30, q.x));
+        const x = Math.max(this.railCenterX - RAIL_HALF, Math.min(this.railCenterX + RAIL_HALF, q.x));
         t.setLocalPosition(new vec3(x, this.railY, this.railZ));
-        this.target = Math.min(this.limit(), (x - this.railCenterX + 30) / 60);
+        this.target = Math.min(this.limit(), (x - this.railCenterX + RAIL_HALF) / (2 * RAIL_HALF));
       });
     });
 
@@ -247,6 +250,13 @@ export class PivotManeuver extends BaseScriptComponent {
         this.setProps(!showGhost && !isSofa);
       }
       this.place(frameAt(plan, this.progress));
+      // The step label rides on the ghost it describes.
+      const ghost = this.sofa.getTransform().getLocalPosition();
+      const top = extents(this.analysis.scenario.box, frameAt(plan, this.progress).pose).y * 50 + 26;
+      const tag = this.warning.getSceneObject().getTransform();
+      tag.setWorldPosition(this.analysis.stageToWorld(new vec3(ghost.x, ghost.y + top, ghost.z)));
+      const k = this.analysis.isLifeSize ? 3 : 1;
+      tag.setLocalScale(new vec3(k, k, k));
 
       const n = this.stepCount(plan);
       const step = Math.max(0, Math.min(plan.steps.length - 1, Math.round(this.progress * n)));
@@ -260,7 +270,7 @@ export class PivotManeuver extends BaseScriptComponent {
       this.sofaDimensions.enabled = settled;
       this.doorDimensions.enabled = settled;
       if (!this.dragging) {
-        this.scrubber.getSceneObject().getTransform().setLocalPosition(new vec3(this.railCenterX - 30 + 60 * this.progress, this.railY, this.railZ));
+        this.scrubber.getSceneObject().getTransform().setLocalPosition(new vec3(this.railCenterX - RAIL_HALF + 2 * RAIL_HALF * this.progress, this.railY, this.railZ));
       }
     });
   }

@@ -10,6 +10,7 @@ import { PivotCornerScenario } from "./PivotCornerScenario";
 import { PivotBoxScenario } from "./PivotBoxScenario";
 import { PivotAutoplayScenario } from "./PivotAutoplayScenario";
 import { PivotYourMoveScenario } from "./PivotYourMoveScenario";
+import { PivotMoveTableScenario } from "./PivotMoveTableScenario";
 
 @component
 export class LeafIndex extends BaseScriptComponent {
@@ -25,5 +26,6 @@ export class LeafIndex extends BaseScriptComponent {
     { id: "pivot-box-and-lift", typename: PivotBoxScenario.getTypeName() },
     { id: "pivot-autoplay", typename: PivotAutoplayScenario.getTypeName() },
     { id: "pivot-your-move", typename: PivotYourMoveScenario.getTypeName() },
+    { id: "pivot-move-table", typename: PivotMoveTableScenario.getTypeName() },
   ];
 }

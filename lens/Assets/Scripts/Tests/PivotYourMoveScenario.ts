@@ -9,10 +9,19 @@ export class PivotYourMoveScenario extends Scenario {
     await sleep(500);
     await goToScenario(1);
     // What would make it fit, on the curated scenario.
-    check(has(textOf("Gate Detail Label"), "FIX: WIDEN THE FLAT DOOR WIDTH TO 85 CM"), "widen fix", textOf("Gate Detail Label"));
-    check(has(textOf("Gate Detail Label"), "FIX: MAKE IT 5 CM LOWER"), "legs fix", textOf("Gate Detail Label"));
+    check(has(textOf("Fix tag label 1"), "WIDEN TO 85"), "widen fix tag", textOf("Fix tag label 1"));
+    check(has(textOf("Fix tag label 2"), "5 CM LOWER"), "legs fix tag", textOf("Fix tag label 2"));
     check(has(textOf("Route Verdict Label"), "SHRINK TO 94%"), "scale line", textOf("Route Verdict Label"));
     check(!findSceneObjectByName("Param plus 1").enabled, "steppers are hidden in scenario mode");
+
+    // Pinching a fix tag tries it: the door is widened to 85 cm and the whole route turns clear.
+    await tap("Fix tag 1");
+    await sleep(1700);
+    check(has(textOf("Scenario Title"), "YOUR MOVE"), "a fix tag opens your-move mode", textOf("Scenario Title"));
+    check(has(textOf("Route Verdict Label"), "ROUTE CLEAR") || has(textOf("Route Verdict Label"), "ROUTE FITS"), "and the widened door lets the sofa through", textOf("Route Verdict Label"));
+    await tap("Mode target");
+    await sleep(900);
+    check(has(textOf("Scenario Title"), "1/7"), "back to the scenarios", textOf("Scenario Title"));
 
     await tap("Mode target");
     await sleep(1700);

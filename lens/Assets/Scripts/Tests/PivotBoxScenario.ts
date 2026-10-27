@@ -1,7 +1,7 @@
 import { Scenario } from "Leaf.lspkg/Scenarios/scenario/Scenario";
 import { expect } from "Leaf.lspkg/Utils/common/Expect";
 import { findSceneObjectByName, sleep } from "Leaf.lspkg/Utils/common/Utils";
-import { check, goToScenario, has, tap, textOf } from "./PivotTestUtils";
+import { check, goToScenario, has, setLifeSize, tap, textOf } from "./PivotTestUtils";
 
 /** Elevator and low-ceiling corridor scenarios use a plain box for the object, drawn at its real size. */
 @component
@@ -15,12 +15,14 @@ export class PivotBoxScenario extends Scenario {
     const box = findSceneObjectByName("Box model").getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
     check(box.enabled, "box.enabled");
     check(!((findSceneObjectByName("Sofa model").getComponent("Component.RenderMeshVisual") as RenderMeshVisual).enabled), "(findSceneObjectByName('Sofa model').getComponent('Component.RenderMeshVisual') as RenderMeshVisual).enabled");
+    await setLifeSize(true);
     const min = box.worldAabbMin();
     const max = box.worldAabbMax();
     expect(max.x - min.x).toBeCloseTo(203, 0);
     expect(max.y - min.y).toBeCloseTo(30, 0);
     expect(max.z - min.z).toBeCloseTo(152, 0);
 
+    await setLifeSize(false);
     await goToScenario(7);
     check(has(textOf("Route Verdict Label"), "ROUTE CLEAR"), "has(textOf('Route Verdict Label'), 'ROUTE CLEAR')");
     check(has(textOf("Doorway Dimensions"), "CORRIDOR"), "has(textOf('Doorway Dimensions'), 'CORRIDOR')");

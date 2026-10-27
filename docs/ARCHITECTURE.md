@@ -81,10 +81,16 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 
 `scenarios` holds seven scenarios (story, lesson, expected verdict); a test holds the planner to every advertised verdict. `frameAt(plan, u)` returns the object's position and pose at progress `u`, interpolating between steps and following the exact swing for L-turns; `attemptFrame` is the failed-attempt wiggle for a doorway where nothing fits.
 
+## Design rules the Lens follows
+
+From the SPECS design material the hackathon is built on: not a website floating in front of the face (information on the thing it is about), not everything on display all the time (the story fades after a few seconds, fix tags go when there is nothing to fix), a few big targets (pinch is the tap), nothing behind the shoulder (everything within the display's narrow view), main content 0.6 to 1.6 m away and a little below eye level, light content for the additive display. A LEAF scenario asserts the placement numbers.
+
 ## Lens layer
 
 | Piece | Behaviour |
 |---|---|
+| `PivotLayout` | Where everything sits: the move table 1.1 m ahead and below eye level, model scale 1:10, positions of controls and labels inside +-36 cm sideways, and text sizes. One file, so the comfort numbers live in one place. |
+| `PivotStageFx` / `PivotPose` | The trail of ghost frames and the dimension lines with their numbers, drawn on the stage; the pose math shared with the ghost. |
 | `PivotAnalysis` | Holds the scenario and selected gate, runs `planRoute`, writes the labels (title, story, route verdict, result, detail), keeps gate chips, restarts the brief scan on each change. Pinch Next scenario cycles. |
 | `PivotSandbox` | *Your move*: object and place pickers, add and remove gates, a stepper row for every parameter of the selected object or gate. It only edits an object and a list of gates and hands the result to `PivotAnalysis`. |
 | `PivotGateView` | Pool of box panels built at runtime from the gate: doorway frame, corridor walls, lift cabin, cutaway L-hall, floor line for the approach limit, a tone-coloured bottleneck marker. |
@@ -96,8 +102,8 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (78 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
-- LEAF (10 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox.
+- Vitest (79 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- LEAF (11 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, the move table (controls and labels inside the field of view, model scale, callouts, trail, life size).
 
 ## Not modelled (cut first)
 

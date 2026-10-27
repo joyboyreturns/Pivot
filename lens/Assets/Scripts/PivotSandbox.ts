@@ -1,9 +1,28 @@
 import { TapInteraction } from "./TapInteraction";
+import { LEFT_X, RIGHT_X, SIZES, W, leftColumn, textWidth } from "./PivotLayout";
 import { boxParams, customScenario, gateParams, nextGate, objectLibrary, placeLibrary, withBoxParam, withGateParam } from "./Planner/index";
 import type { Box, Gate, Param, Scenario } from "./Planner/index";
+import type { ObjectPreset } from "./Planner/index";
 
 const MAX_ROWS = 5;
 const MAX_GATES = 3;
+
+/** Wire one of the editor-authored pinch buttons: a marker cube, a label, hover glow and a tap handler. */
+export function wireButton(find: (n: string) => SceneObject, text: (n: string) => Text3D, target: string, label: string, caption: string, onTap: () => void): Button {
+  const object = find(target);
+  const tap = object.getComponent("Component.ScriptComponent") as unknown as TapInteraction;
+  const marker = object.getChild(0).getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
+  const material = marker.mainMaterial.clone();
+  marker.mainMaterial = material;
+  marker.getSceneObject().getTransform().setLocalScale(new vec3(3.6, 3.6, 3.6));
+  const t = text(label);
+  t.size = SIZES.button;
+  t.text = caption;
+  tap.onHoverStart.add(() => { material.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
+  tap.onHoverEnd.add(() => { material.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
+  tap.onTap.add(onTap);
+  return { object, label: t, tap, material };
+}
 
 /** What the sandbox needs from the analysis it drives. */
 export interface SandboxHost {
@@ -13,7 +32,7 @@ export interface SandboxHost {
   setSwitchLabel(text: string): void;
 }
 
-interface Button {
+export interface Button {
   object: SceneObject;
   label: Text3D;
   tap: TapInteraction;
@@ -29,6 +48,7 @@ export class Sandbox {
   public active = false;
   public editObject = false;
   private presetIndex = 0;
+  private preset: ObjectPreset = objectLibrary[0];
   private placeIndex = 0;
   private box: Box = objectLibrary[0].box;
   private gates: Gate[] = placeLibrary[0].gates.slice();
@@ -43,19 +63,7 @@ export class Sandbox {
   ) {}
 
   private button(target: string, label: string, text: string, onTap: () => void): Button {
-    const object = this.find(target);
-    const tap = object.getComponent("Component.ScriptComponent") as unknown as TapInteraction;
-    const marker = object.getChild(0).getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
-    const material = marker.mainMaterial.clone();
-    marker.mainMaterial = material;
-    marker.getSceneObject().getTransform().setLocalScale(new vec3(4, 4, 4));
-    const t = this.text(label);
-    t.size = 110;
-    t.text = text;
-    tap.onHoverStart.add(() => { material.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
-    tap.onHoverEnd.add(() => { material.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
-    tap.onTap.add(onTap);
-    return { object, label: t, tap, material };
+    return wireButton(this.find, this.text, target, label, text, onTap);
   }
 
   /** Wire up the buttons; the scene objects are authored in the editor. */
@@ -84,9 +92,23 @@ export class Sandbox {
     this.editObject = false;
     this.presetIndex = 0;
     this.placeIndex = 0;
+    this.preset = objectLibrary[0];
     this.box = objectLibrary[0].box;
     this.gates = placeLibrary[0].gates.slice();
     this.push(0);
+  }
+
+  /** Take over the scenario on screen, with a change applied (a suggested fix): the wearer can keep editing from there. */
+  public adopt(boxName: string, box: Box, gates: Gate[], gateIndex: number): void {
+    const name = boxName.replace(/ \d+ x \d+ x \d+ cm$/, "");
+    const found = objectLibrary.findIndex((o) => o.name === name);
+    this.presetIndex = found >= 0 ? found : 0;
+    this.preset = found >= 0 ? objectLibrary[found] : { id: "custom", name, box, look: name.toLowerCase().indexOf("sofa") >= 0 ? "sofa" : "box" };
+    this.active = true;
+    this.editObject = false;
+    this.box = box;
+    this.gates = gates.slice();
+    this.push(gateIndex);
   }
 
   public exit(): void {
@@ -102,7 +124,8 @@ export class Sandbox {
 
   public nextObject(): void {
     this.presetIndex = (this.presetIndex + 1) % objectLibrary.length;
-    this.box = objectLibrary[this.presetIndex].box;
+    this.preset = objectLibrary[this.presetIndex];
+    this.box = this.preset.box;
     this.push();
   }
 
@@ -128,7 +151,7 @@ export class Sandbox {
   }
 
   private current(): Scenario {
-    const scenario = customScenario(objectLibrary[this.presetIndex], this.gates, this.box);
+    const scenario = customScenario(this.preset, this.gates, this.box);
     scenario.title = "Your move";
     return scenario;
   }
@@ -175,47 +198,43 @@ export class Sandbox {
   /** Position and fill every sandbox control; hide all of them when the sandbox is off. */
   public show(): void {
     const on = this.active;
-    const place = (name: string, x: number, y: number, z: number) => this.find(name).getTransform().setLocalPosition(new vec3(x, y, z));
+    const place = (name: string, x: number, y: number, z: number) => this.find(name).getTransform().setLocalPosition(W(x, y, z));
     for (const key of Object.keys(this.buttons)) {
       const b = this.buttons[key];
       b.object.enabled = key === "mode" ? true : on;
       b.label.getSceneObject().enabled = key === "mode" ? true : on;
     }
-    place("Mode target", -80, 246, 195);
-    place("Mode label", -56, 246, 195);
+    const at = (target: string, label: string, row: number) => {
+      place(target, LEFT_X, leftColumn(row), -108);
+      place(label, LEFT_X + 3 + textWidth(this.text(label).text, SIZES.button) / 2, leftColumn(row), -108);
+    };
     this.buttons.mode.label.text = on ? "‹ SCENARIOS" : "YOUR MOVE ›";
     this.host.setSwitchLabel(on ? "NEXT PLACE ›" : "NEXT SCENARIO ›");
+    at("Mode target", "Mode label", 0);
+    at("Scenario switch target", "Scenario switch label", 1);
+    at("Size target", "Size label", 2);
     this.shown = on ? this.params() : [];
     const object = this.buttons.objectChip;
-    place("Object chip", -84, 203, 195);
-    place("Object chip label", -63, 203, 195);
-    object.label.text = `${this.editObject ? "› " : ""}OBJECT ${objectLibrary[this.presetIndex].name.toUpperCase()}`;
+    object.label.text = `${this.editObject ? "› " : ""}${this.preset.name.toUpperCase()}`;
+    at("Object chip", "Object chip label", 3);
     object.material.mainPass.baseColor = this.editObject ? new vec4(0.6, 1, 1, 1) : new vec4(0.32, 0.53, 0.58, 1);
-    place("Object target", -84, 164, 195);
-    place("Object label", -60, 164, 195);
-    place("Gate add target", -84, 155, 195);
-    place("Gate add label", -66, 155, 195);
-    place("Gate remove target", -84, 146, 195);
-    place("Gate remove label", -66, 146, 195);
     // The gate buttons stay put (a control that vanishes under the wearer's pinch feels broken); at the limits they do nothing.
     this.buttons.add.label.text = this.gates.length < MAX_GATES ? "+ GATE" : "3 GATES MAX";
     this.buttons.remove.label.text = this.gates.length > 1 ? "– GATE" : "1 GATE MIN";
+    at("Object target", "Object label", 4);
+    at("Gate add target", "Gate add label", 5);
+    at("Gate remove target", "Gate remove label", 6);
     for (let i = 0; i < MAX_ROWS; i++) {
       const row = this.rows[i];
       const p = this.shown[i];
-      const y = 203 - i * 9;
+      const y = 14 - i * 6;
       row.param = p || null;
       for (const b of [row.minus, row.plus]) b.object.enabled = !!p;
       row.label.getSceneObject().enabled = !!p;
-      place(`Param minus ${i + 1}`, 38, y, 185);
-      place(`Param plus ${i + 1}`, 86, y, 185);
-      place(`Param label ${i + 1}`, 62, y, 185);
+      place(`Param minus ${i + 1}`, RIGHT_X - 7.5, y, -108);
+      place(`Param plus ${i + 1}`, RIGHT_X + 7.5, y, -108);
+      place(`Param label ${i + 1}`, RIGHT_X + 0.5, y, -108);
       if (p) row.label.text = `– ${p.label} ${this.display(p)} +`;
     }
-  }
-
-  /** Gate chip rows sit one row lower than usual while the object chip takes the first row. */
-  public chipY(i: number): number {
-    return this.active ? 194 - i * 9 : 203 - i * 9;
   }
 }

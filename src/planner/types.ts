@@ -213,4 +213,14 @@ export interface Fix {
   delta: number;
   /** Plain-language suggestion. */
   label: string;
+  /** A few words, for a tag on the thing it is about ("+5 cm", "5 cm lower"). */
+  short: string;
+  /** What to change to try the fix: gate parameters of the gate asked about, or object parameters (see `gateParams`, `boxParams`). */
+  changes: FixChange[];
+}
+
+export interface FixChange {
+  scope: "gate" | "box";
+  id: string;
+  value: number;
 }

@@ -13,7 +13,7 @@ export class PivotScenario extends Scenario {
     expect(label.enabled).toBe(true);
     expect(has(textOf("PIVOT No-fit Label"), "DOES NOT FIT")).toBe(true);
     expect(has(textOf("PIVOT No-fit Label"), "5 CM TOO TIGHT")).toBe(true);
-    expect(has(textOf("Gate Detail Label"), "85 CM")).toBe(true);
+    expect(has(textOf("Fix tag label 1"), "WIDEN TO 85")).toBe(true);
     const sofa = sofaRoot();
     const before = sofa.getTransform().getLocalPosition().z;
     await step(1);
