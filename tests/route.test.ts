@@ -254,7 +254,8 @@ describe("scenario library", () => {
     const text = formatScenario(scenarioById("studio-sofa")!);
     expect(text).toContain("Studio flat sofa");
     expect(text).toContain("<- bottleneck");
-    expect(text).toContain("at least 85 cm");
+    expect(text).toContain("Widen the Flat door width to 85 cm");
+    expect(text).toContain("5 cm lower");
   });
 });
 

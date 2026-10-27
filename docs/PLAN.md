@@ -1,6 +1,6 @@
 # PIVOT step-by-step plan
 
-Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is reported as 9 Nov 2026, 5:00 PM ET, but that comes from an earlier research report and has not been checked against the official page. Budget about 25 hours, 2-3 hours a day alongside LicenseGraph.
+Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.com/rules on 28 Oct 2026) give the Submission Period as 15 Oct 10:00 AM ET to **9 Nov 2026, 5:00 PM ET**, judging 10-17 Nov, winners around 19 Nov. The Live Project Review is Thu 5 Nov, 12 PM ET (post in #devpost-learn-feedback tagged "Learn AR with SPECS" and "Will It Ship").
 
 ## Step 1: Foundation (27-28 Oct) - done
 
@@ -32,6 +32,15 @@ Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is 
 - [x] Hands-free replay after each analysis, camera-facing labels, wardrobe and mattress details
 - Done when: the full flow runs in Preview. Met in Interactive Preview with mouse-simulated pinch.
 
+## Step 3b: Any object, any place - done in Preview
+
+- [x] Parameter model for every box and gate; edited copies, clamped to a centimetre
+- [x] Library of 12 objects and 6 places; free-form routes of up to 3 gates
+- [x] "What would make it fit": smallest widening, hall depth, cabin depth, halls or object change (`suggestFixes`)
+- [x] "How big could it be": `maxScale`
+- [x] *Your move* mode in the Lens: Next object, Next place, + Gate, - Gate, steppers on every parameter
+- [x] LEAF scenario for the sandbox
+
 ## Step 4: Polish (4-6 Nov)
 
 - [x] Walk-around check with the preview camera (orbit), L-turn framing, text stack, switch size, long titles
@@ -41,7 +50,7 @@ Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is 
 
 ## Step 5: Submit (7-8 Nov)
 
-- [ ] Re-read the official rules page one last time (deadline, team size, prizes, prize payment to India)
+- [ ] Re-read the rules page for changes (they can be amended on the site)
 - [ ] Make the repo public with the Lens project and the `devpost/` folder
 - [ ] Submit on 8 Nov
 
@@ -55,8 +64,19 @@ Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is 
 6. The blocked scenarios show an Unverified maneuver illustration that stops at the jam.
 7. The corner scenario swings the sofa round the corner at the marker.
 
+## Submission checklist (from the official rules and the Devpost page)
+
+Judging is two stages: pass/fail viability (uses the required tools, meets the requirements), then four equally weighted criteria: Design, Technical Implementation, Innovation/Idea, Presentation.
+
+- [ ] Demo video under 3 minutes, public on YouTube, screen recording of the Lens Studio preview, no third-party trademarks or copyrighted music (`lens/devpost/demo-outline.md`)
+- [ ] Public repo (GitHub, GitLab or Bitbucket) with the Lens Studio project and the `devpost/` folder
+- [ ] Text description of features and functionality (`lens/devpost/pitch.md`)
+- [ ] Disclose pre-existing code: Spectacles Interaction Kit, LEAF, the Interior Props package and Lens Studio template materials; everything under `src/`, `lens/Assets/Scripts` (except `DragInteraction.ts`, `TapInteraction.ts`, adapted from the SIK recipes) and `tests/` was written during the Submission Period (first commit 27 Oct 2026)
+- [ ] Show the process in the video if time allows: design brief, the agent building through the Lens Studio MCP, LEAF runs (`lens/devpost/build-notes.md`)
+- [ ] Submit from one Representative's account; prizes are paid to the Representative
+
 ## Open questions
 
-- Official SPECS rules, deadline, prizes and team-size limit (unconfirmed).
-- Whether prizes can be paid to India.
+- Team size has no stated limit; one Representative submits.
+- Prizes: $1,250 / $750 / $500 cash, subject to winner affidavit and tax forms (W-8BEN for non-US residents). Whether payment to India works is still to confirm with the hackathon manager.
 - Feel on real glasses: reading distance of the text stack, reach of the chips, hand-tracking reliability. Nothing here was tried on a device.

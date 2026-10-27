@@ -36,6 +36,9 @@ import Event from "SpectaclesInteractionKit.lspkg/Utils/Event";
 @component
 export class TapInteraction extends BaseScriptComponent {
 
+    /** Side of the auto-created box collider (cm). Small for controls that sit close together. */
+    @input colliderSize: number = 22;
+
     // Configuration — modify before onAwake or via inspector defaults
     private CONFIG = {
         autoCreateCollider: true,          // Create a box collider if the object doesn't have one
@@ -70,7 +73,7 @@ export class TapInteraction extends BaseScriptComponent {
         if (!collider && this.CONFIG.autoCreateCollider) {
             collider = this.getSceneObject().createComponent("Physics.ColliderComponent");
             const shape = Shape.createBoxShape();
-            shape.size = this.CONFIG.colliderSize;
+            shape.size = new vec3(this.colliderSize, this.colliderSize, this.colliderSize);
             collider.shape = shape;
         }
         if (collider) {

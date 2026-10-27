@@ -1,7 +1,8 @@
-import { planRoute, scenarios, minDoorwayWidth } from "./Planner/index";
+import { planRoute, scenarios, suggestFixes, maxScale } from "./Planner/index";
 import type { Gate, Plan, RoutePlan, Scenario } from "./Planner/index";
 import { TapInteraction } from "./TapInteraction";
 import { GateView, TONES, toneFor } from "./PivotGateView";
+import { Sandbox } from "./PivotSandbox";
 import type { Tone } from "./PivotGateView";
 
 const CM = 100;
@@ -74,6 +75,8 @@ export class PivotAnalysis extends BaseScriptComponent {
   private stage!: SceneObject;
   private camera: SceneObject | null = null;
   private billboards: SceneObject[] = [];
+  private sandbox!: Sandbox;
+  private switchLabel!: Text3D;
 
   public scenarioIndex = 0;
   public gateIndex = 0;
@@ -108,11 +111,31 @@ export class PivotAnalysis extends BaseScriptComponent {
 
   public selectScenario(index: number): void {
     this.scenarioIndex = ((index % scenarios.length) + scenarios.length) % scenarios.length;
-    this.scenario = scenarios[this.scenarioIndex];
-    this.route = planRoute(this.scenario.box, this.scenario.gates);
+    this.setScenario(scenarios[this.scenarioIndex], -1, true);
+  }
+
+  /** Show any scenario: a curated one or the sandbox's. `gateIndex` -1 picks the first blocked gate, else the bottleneck. */
+  public setScenario(scenario: Scenario, gateIndex: number, scan: boolean): void {
+    this.scenario = scenario;
+    this.route = planRoute(scenario.box, scenario.gates);
     const start = this.route.firstBlockedIndex >= 0 ? this.route.firstBlockedIndex : this.route.bottleneckIndex;
-    this.selectGate(Math.max(0, start), false);
-    this.restartScan(0.9);
+    this.selectGate(gateIndex >= 0 ? gateIndex : Math.max(0, start), false);
+    if (scan) this.restartScan(0.9);
+  }
+
+  /** Called by the sandbox after every edit. */
+  public applySandbox(scenario: Scenario, gateIndex: number): void {
+    this.setScenario(scenario, Math.min(gateIndex, scenario.gates.length - 1), false);
+  }
+
+  private toggleSandbox(): void {
+    if (this.sandbox.active) {
+      this.sandbox.exit();
+      this.selectScenario(this.scenarioIndex);
+    } else {
+      this.sandbox.enter();
+      this.restartScan(0.9);
+    }
   }
 
   public selectGate(index: number, restartScan = true): void {
@@ -153,13 +176,13 @@ export class PivotAnalysis extends BaseScriptComponent {
   }
 
   private detailTextFor(gate: Gate, plan: Plan): string {
-    if (!plan.fits && plan.reason === "gate" && (gate.kind === "doorway" || gate.kind === "corridor")) {
-      const need = minDoorwayWidth(this.scenario.box, gate.height);
-      if (need) return `NEEDS A DOORWAY ≥ ${cm(need.width)} · THIS ONE ${cm(gate.width)}`;
+    const lines: string[] = [];
+    if (plan.turn) lines.push(`TIGHTEST ${Math.abs(Math.round(plan.turn.tightestAngle))}° INTO THE TURN${plan.turn.tipped ? " · LAID ON ITS BACK" : ""}`);
+    else if (plan.approachNeeded) lines.push(`TURNING SWEEPS ${metres(plan.approachNeeded.depth)} DEEP × ${metres(plan.approachNeeded.height)} HIGH`);
+    if (!plan.fits) {
+      for (const fix of suggestFixes(this.scenario.box, gate).slice(0, 2)) lines.push(`FIX: ${fix.label.toUpperCase()}`);
     }
-    if (plan.turn) return `TIGHTEST ${Math.abs(Math.round(plan.turn.tightestAngle))}° INTO THE TURN${plan.turn.tipped ? " · LAID ON ITS BACK" : ""}`;
-    if (plan.approachNeeded) return `TURNING SWEEPS ${metres(plan.approachNeeded.depth)} DEEP × ${metres(plan.approachNeeded.height)} HIGH`;
-    return "";
+    return lines.join("\n");
   }
 
   private refresh(): void {
@@ -168,7 +191,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     const gate = this.currentGate;
     const plan = this.currentPlan;
 
-    this.titleText.text = `${this.scenarioIndex + 1}/${scenarios.length}  ${s.title.toUpperCase()}`;
+    this.titleText.text = this.sandbox.active ? `YOUR MOVE · ${s.boxName.replace(/ \d+ x \d+ x \d+ cm$/, "").toUpperCase()}` : `${this.scenarioIndex + 1}/${scenarios.length}  ${s.title.toUpperCase()}`;
     this.storyText.text = wrap(s.story, 52);
     const limiting = route.gates[route.bottleneckIndex];
     const verdictHead =
@@ -178,7 +201,9 @@ export class PivotAnalysis extends BaseScriptComponent {
           ? `ROUTE FITS, ONLY JUST · ${limiting.gate.name.toUpperCase()} ${cm(route.clearance)}`
           : `ROUTE CLEAR · TIGHTEST ${limiting.gate.name.toUpperCase()} ${cm(route.clearance)}`;
     const verifiedLine = route.fits ? (route.verified ? "EVERY STEP CHECKED" : `${route.unverifiedSteps} STEPS UNVERIFIED`) : "";
-    this.verdictText.text = verifiedLine ? `${verdictHead}\n${verifiedLine}` : verdictHead;
+    const scale = maxScale(s.box, s.gates);
+    const scaleLine = scale >= 1 ? `THIS ROUTE ALLOWS UP TO ${Math.min(180, Math.round(scale * 100))}% OF THIS SIZE` : scale > 0 ? `SHRINK TO ${Math.round(scale * 100)}% OF THIS SIZE TO FIT` : "NO SIZE FITS THIS ROUTE";
+    this.verdictText.text = [verdictHead, verifiedLine, scaleLine].filter((l) => l).join("\n");
 
     this.view.show(gate, plan, this.gateTone(plan));
     const stage = this.stage.getTransform();
@@ -199,10 +224,11 @@ export class PivotAnalysis extends BaseScriptComponent {
       chip.material.mainPass.baseColor = TONES[tone];
       const selected = i === this.gateIndex;
       const bottleneck = i === route.bottleneckIndex ? "◆ " : "";
-      chip.label.text = `${selected ? "› " : ""}${i + 1} ${bottleneck}${entry.gate.name.toUpperCase()}`;
+      chip.label.text = `${selected && !this.sandbox.editObject ? "› " : ""}${i + 1} ${bottleneck}${entry.gate.name.toUpperCase()}`;
       chip.marker.getSceneObject().getTransform().setLocalScale(selected ? new vec3(5.5, 5.5, 5.5) : new vec3(3.5, 3.5, 3.5));
     }
     this.layout();
+    this.sandbox.show();
   }
 
   /** Place the floating UI relative to the scene; everything sits in front of the gate at comfortable reading distance. */
@@ -213,8 +239,8 @@ export class PivotAnalysis extends BaseScriptComponent {
     place("Scenario Story", 0, 233, 200);
     place("Route Verdict Label", 0, 215, 200);
     for (let i = 0; i < MAX_CHIPS; i++) {
-      place(`Gate chip ${i + 1}`, -84, 203 - i * 9, 195);
-      place(`Gate chip label ${i + 1}`, -63, 203 - i * 9, 195);
+      place(`Gate chip ${i + 1}`, -84, this.sandbox.chipY(i), 195);
+      place(`Gate chip label ${i + 1}`, -63, this.sandbox.chipY(i), 195);
     }
     place("Scenario switch target", 72, 246, 195);
     place("Scenario switch label", 50, 246, 195);
@@ -247,6 +273,17 @@ export class PivotAnalysis extends BaseScriptComponent {
         this.boxMesh,
         { wall: this.wallMaterial, glow: this.glowMaterial, ghost: this.ghostPanelMaterial }
       );
+      this.switchLabel = this.text("Scenario switch label");
+      this.sandbox = new Sandbox(
+        {
+          apply: (scenario, gate) => this.applySandbox(scenario, gate),
+          gateIndex: () => this.gateIndex,
+          gateCount: () => this.route.gates.length,
+          setSwitchLabel: (t) => { this.switchLabel.text = t; },
+        },
+        (n) => this.find(n),
+        (n) => this.text(n)
+      );
       for (let i = 0; i < MAX_CHIPS; i++) {
         const object = this.find(`Gate chip ${i + 1}`);
         const target = object.getComponent("Component.ScriptComponent") as unknown as TapInteraction;
@@ -258,7 +295,9 @@ export class PivotAnalysis extends BaseScriptComponent {
         this.chips.push({ target, object, marker, material, label });
         const index = i;
         target.onTap.add(() => {
-          if (index < this.route.gates.length) this.selectGate(index);
+          if (index >= this.route.gates.length) return;
+          if (this.sandbox.active) this.sandbox.selectGate();
+          this.selectGate(index);
         });
       }
       this.switchMaterial = this.switchVisual.mainMaterial.clone();
@@ -266,12 +305,13 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.switchVisual.getSceneObject().getTransform().setLocalScale(new vec3(8, 8, 8));
       this.switchDoor.onHoverStart.add(() => { this.switchMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
       this.switchDoor.onHoverEnd.add(() => { this.switchMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
-      this.switchDoor.onTap.add(() => this.selectScenario(this.scenarioIndex + 1));
-      this.text("Scenario switch label").text = "NEXT SCENARIO ›";
+      this.switchDoor.onTap.add(() => (this.sandbox.active ? this.sandbox.nextPlace() : this.selectScenario(this.scenarioIndex + 1)));
+      this.switchLabel.text = "NEXT SCENARIO ›";
+      this.sandbox.init(() => this.toggleSandbox());
       this.result.getSceneObject().enabled = false;
       this.scan.enabled = false;
       // Labels turn about the vertical to face the wearer, so they stay readable while walking round the gate.
-      const names = ["Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
+      const names = ["Mode label", "Object label", "Gate add label", "Gate remove label", "Object chip label", "Param label 1", "Param label 2", "Param label 3", "Param label 4", "Param label 5", "Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
       this.billboards = names.map((n) => this.find(n));
       for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
         const o = global.scene.getRootObject(i);

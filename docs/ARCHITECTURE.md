@@ -71,6 +71,12 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 
 `minDoorwayWidth(box, height)` (bisection on the monotone fit answer), `minCornerWidth(box, ceiling)` and `fitMatrix(boxes, routes)`.
 
+### Any object, any place
+
+- `builder.ts`: every box and gate exposes its editable numbers as `Param` rows (`boxParams`, `gateParams`) and returns edited copies (`withBoxParam`, `withGateParam`), clamped and rounded to a centimetre. A hall depth of 0 means "not measured": the approach is dropped and the turn becomes unverified. `defaultGate` and `nextGate` build routes.
+- `library.ts`: 12 objects (`objectLibrary`), 6 places (`placeLibrary`) and `customScenario` for the Lens's *Your move* mode.
+- `fixes.ts`: `suggestFixes(box, gate)` finds the smallest change that makes a blocked gate pass: widen the opening (judged without the approach space first, then, if the turn is still blocked, the hall depth needed), a deeper cabin, wider halls, or a smaller object (height, depth or length, capped at 25 cm). Each search is a bisection with the quick planner (30 degree steps) confirmed by the full planner. `maxScale(box, gates)` is the largest uniform scale the whole route allows.
+
 ### Scenario library and choreography
 
 `scenarios` holds seven scenarios (story, lesson, expected verdict); a test holds the planner to every advertised verdict. `frameAt(plan, u)` returns the object's position and pose at progress `u`, interpolating between steps and following the exact swing for L-turns; `attemptFrame` is the failed-attempt wiggle for a doorway where nothing fits.
@@ -80,6 +86,7 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 | Piece | Behaviour |
 |---|---|
 | `PivotAnalysis` | Holds the scenario and selected gate, runs `planRoute`, writes the labels (title, story, route verdict, result, detail), keeps gate chips, restarts the brief scan on each change. Pinch Next scenario cycles. |
+| `PivotSandbox` | *Your move*: object and place pickers, add and remove gates, a stepper row for every parameter of the selected object or gate. It only edits an object and a list of gates and hands the result to `PivotAnalysis`. |
 | `PivotGateView` | Pool of box panels built at runtime from the gate: doorway frame, corridor walls, lift cabin, cutaway L-hall, floor line for the approach limit, a tone-coloured bottleneck marker. |
 | `PivotManeuver` | Ghost playback from `frameAt`; the object rotates about the middle of its volume and rests on the floor. Sofa mesh for sofas, a real-size box with details (wardrobe doors, mattress quilting) otherwise. Replays the maneuver by itself after each analysis (`autoPlay`); the first pinch or drag takes over. Arrow steps, rail scrubs, label says verified step or Unverified maneuver. |
 | Labels | Billboarded about the vertical toward the wearer's head so they read from any side. |
@@ -89,8 +96,8 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (60 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
-- LEAF (9 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay.
+- Vitest (78 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- LEAF (10 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox.
 
 ## Not modelled (cut first)
 

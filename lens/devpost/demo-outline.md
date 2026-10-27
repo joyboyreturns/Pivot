@@ -1,13 +1,13 @@
 # PIVOT demo outline
 
-Target length: under 3 minutes (about 2:30). Record the Interactive Preview, including the controls and the scene as you move around it. Reset the preview before recording so it starts on scenario 1.
+Under 3 minutes (about 2:40). Record the Lens Studio Interactive Preview. Start from a clean preview on scenario 1. No music (or music you own). Keep the label and the verdict in view while the ghost moves.
 
-1. **The problem (0:00-0:15).** "Before lifting a sofa: can it get through the door, up the hall, into the lift? PIVOT answers that at the place where the move happens." Show scenario 1: the sofa, the 80 cm doorway, the gate chips.
-2. **Blocked, and why (0:15-0:40).** Read the verdict: "Route blocked at the flat door." The label says the sofa's smallest face is 85 cm and the door needs to be at least 85 cm. The ghost replays by itself (pinch the arrow or drag the rail to take over): it is an illustration and the label says **Unverified maneuver**. Point out that it stops at the jam.
-3. **Fixed door, checked path (0:40-1:05).** Pinch *Next scenario*: same sofa, 95 cm door. Route clear, 5 cm to spare. Step through: a quarter turn, then through. Now the label says **Verified step**, because the room to turn was checked too.
-4. **The hall is the problem (1:05-1:30).** Next scenario: same door, 1.2 m hall. The door fits, but turning needs a 2.28 m swing. "A doorway-only check would have said yes."
-5. **A whole route (1:30-1:55).** Wardrobe by lift: three gates. Pinch chip 2 to see the lift cabin; pinch chip 3: the flat door's hall was never measured, so that turn is **Unverified maneuver**.
-6. **Corner (1:55-2:20).** Tight hallway corner: the L-shaped hall at real size, the sofa laid on its back swinging round, the amber marker at the tightest point, 1 cm to spare.
-7. **Limits (2:20-2:40).** "Logic proven in the preview and the tests. Feel on real glasses unproven: no device was available. Dimensions are supplied in advance, and furniture is a box."
+1. **The problem (0:00-0:15).** "Before lifting a sofa: can it get through the door, up the hall, into the lift? PIVOT answers that where the move happens, at real scale, for any object and any place." Show scenario 1: sofa, 80 cm door, gate chips.
+2. **Blocked, and the fix (0:15-0:40).** "Route blocked at the flat door." Read the fix lines: widen the door to 85 cm, or take 5 cm off the height. "Shrink to 94% to fit." The ghost replays by itself and says **Unverified maneuver**: it is an illustration of a move that does not fit.
+3. **Checked path (0:40-1:00).** Pinch *Next scenario*: 95 cm door. Route clear, 5 cm to spare. The label now says **Verified step**: the turn and the room to make it were checked.
+4. **The hall is the problem (1:00-1:15).** Next: same door, 1.2 m hall. Door fits, but turning needs 2.28 m. "A doorway-only check would have said yes."
+5. **A whole route (1:15-1:40).** Wardrobe by lift, three gates. Pinch chip 2 for the lift cabin; chip 3: nobody measured that hall, so the turn is **Unverified maneuver**. Corner scenario: L-shaped hall, sofa laid on its back, amber marker, 1 cm to spare. Walk round it with WASD to show the labels turning.
+6. **Any object, any place (1:40-2:25).** Pinch **Your move**. *Next place*: the terraced house. *Next object*: piano, wardrobe, bed. Pinch the Object chip and step the length down with the stepper until the verdict flips from blocked to fits. Pinch a gate chip, change the door width, add a gate. "Every number is yours; PIVOT re-plans the whole route each time and tells you what would fix it."
+7. **Honest limits and how it was built (2:25-2:50).** "Logic proven in the preview and 78 + 10 tests. Feel on real glasses unproven: no device. Built with a coding agent through the Lens Studio MCP and tested with LEAF." Flash `design-brief.md` and a LEAF run.
 
-Keep the result and the verified or unverified label in view while the ghost moves. Show the project working rather than slides.
+Pitch points to say out loud: problem (moving day, not placement), who (buyers, movers, shops), why glasses (world scale, hands free), what makes it different (route not spot, verified versus unverified, fixes).

@@ -4,7 +4,7 @@
 
 PIVOT is an AR path planner for SPECS. Most AR furniture apps answer "does it fit in this spot?". PIVOT answers "can it get there?": the whole route, gate by gate, at real scale, with the tightest point marked and every step labelled as checked or unverified.
 
-Give it an object's dimensions and a route (doorways, a lift, a low corridor, an L-shaped hallway corner). It shows a short sequence of ghost poses (tip, turn, slide) that get the object through each gate, which gate limits the move, and an honest verdict: clear, tight or blocked.
+Give it any object's dimensions and any route (doorways, a lift, a low corridor, an L-shaped hallway corner). It shows a short sequence of ghost poses (tip, turn, slide) that get the object through each gate, which gate limits the move, and an honest verdict: clear, tight or blocked.
 
 Built for the Learn AR with SPECS challenge.
 
@@ -14,11 +14,13 @@ Built for the Learn AR with SPECS challenge.
 - **Route planner.** `planRoute(box, gates)` plans every gate, names the bottleneck, and gives one verdict.
 - **Verified versus unverified.** Tilts and turns are checked against the room in front of the gate (swing depth and ceiling). Where that room was not given, the step is shown as an "Unverified maneuver" and counted.
 - **Inverse questions.** The smallest doorway a sofa needs, and a fit matrix of furniture against routes.
+- **What would make it fit.** When a gate blocks, PIVOT says the smallest change that works: widen the opening to 85 cm, give the hall 2.3 m, take 5 cm off the height (legs off), widen both halls. It also says how big the object could be: "this route allows up to 104% of this size".
+- **Any object, any place.** A library of 12 objects and 6 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) has a stepper, and routes can have up to three gates of any type.
 - **Seven scenarios** with story text: studio flat sofa, the same sofa with a 95 cm door, "the door fits but the hall does not", wardrobe by lift, a tight hallway corner, a queen mattress that cannot ride the lift, a wardrobe down a low corridor.
 
 ## In the Lens (Lens Studio 5.23, Interactive Preview)
 
-- Pinch **Next scenario** to cycle scenarios.
+- Pinch **Next scenario** to cycle scenarios, or pinch **Your move** for the sandbox: **Next object**, **Next place**, **+ Gate**, **– Gate**, and a **–/+** stepper for every size (one tap is 1 cm, quick repeats 5 cm). Pinch the **Object** chip to edit the object, a gate chip to edit that gate. A hall depth of 0 means "not measured", and the turn is then shown as unverified.
 - Pinch a **gate chip** to look at one gate of the route; the chip colour and the diamond show the verdict and the bottleneck.
 - After the analysis scan the ghost plays the maneuver by itself; pinch the **arrow** to step it or drag the **rail** to scrub, and your first touch takes over.
 - Labels turn to face you, so you can walk round the gate and still read them.
@@ -29,7 +31,7 @@ No SPECS device was available. Everything was run in Interactive Preview with mo
 
 ## Status
 
-Planner core and Lens experience working. 60 Vitest tests (`npm test`) and 9 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 78 Vitest tests (`npm test`) and 10 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

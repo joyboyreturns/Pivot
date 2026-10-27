@@ -189,3 +189,28 @@ export interface RouteOptions extends PlanOptions {
   /** Routes whose least slack is below this (m) are "tight". Default 0.03. */
   tightClearance?: number;
 }
+
+/** One adjustable number of a box or gate, for steppers in a UI. Lengths in metres. */
+export interface Param {
+  id: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  /** True when the value only has meaning once measured (a hall depth of 0 means "not measured"). */
+  optional?: boolean;
+}
+
+/** Something PIVOT can suggest to make a blocked gate work. */
+export interface Fix {
+  kind: "widen" | "deepen" | "shrink";
+  /** What changes: a gate dimension or an object dimension. */
+  target: string;
+  from: number;
+  to: number;
+  /** Size of the change (m), always positive. */
+  delta: number;
+  /** Plain-language suggestion. */
+  label: string;
+}

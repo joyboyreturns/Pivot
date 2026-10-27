@@ -1,4 +1,4 @@
-import { minDoorwayWidth } from "./inverse";
+import { suggestFixes, maxScale } from "./fixes";
 import type { FitRow } from "./inverse";
 import type { Scenario } from "./scenarios";
 import { planRoute } from "./route";
@@ -48,10 +48,9 @@ export function formatScenario(s: Scenario): string {
   const route = planRoute(s.box, s.gates);
   const out = [`## ${s.title}`, s.story, `Object: ${s.boxName}`, formatRoute(route)];
   const blocked = route.gates[route.firstBlockedIndex];
-  if (blocked && blocked.plan.reason === "gate" && (blocked.gate.kind === "doorway" || blocked.gate.kind === "corridor")) {
-    const need = minDoorwayWidth(s.box, blocked.gate.height);
-    if (need) out.push(`  It would need a doorway at least ${cm(need.width)} wide (this one is ${cm(blocked.gate.width)}).`);
-  }
+  if (blocked) for (const fix of suggestFixes(s.box, blocked.gate).slice(0, 3)) out.push(`  Fix: ${fix.label}.`);
+  const scale = maxScale(s.box, s.gates);
+  out.push(scale >= 1 ? `  This route allows up to ${Math.round(scale * 100)}% of this size.` : `  Shrink to ${Math.round(scale * 100)}% of this size to fit.`);
   out.push(`  ${s.lesson}`);
   return out.join("\n");
 }

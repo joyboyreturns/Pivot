@@ -43,6 +43,8 @@ export class PivotManeuver extends BaseScriptComponent {
   private lastLabel = "";
   private props: SceneObject[] = [];
   private bodyMaterial!: Material;
+  private baseScale = new vec3(1, 1, 1);
+  private baseOffset = vec3.zero();
   private touched = false;
   private autoClock = 0;
 
@@ -62,13 +64,20 @@ export class PivotManeuver extends BaseScriptComponent {
     this.lastLabel = "";
     const s = this.analysis.scenario;
     const isSofa = s.boxName.toLowerCase().indexOf("sofa") >= 0;
+    if (isSofa) {
+      // The sofa mesh is 2.10 x 0.85 x 0.90 m; stretch it to whatever box was asked for.
+      const f = new vec3(s.box.length / 2.1, s.box.height / 0.85, s.box.depth / 0.9);
+      const model = this.sofaVisual.getSceneObject().getTransform();
+      model.setLocalScale(new vec3(this.baseScale.x * f.x, this.baseScale.y * f.y, this.baseScale.z * f.z));
+      model.setLocalPosition(new vec3(this.baseOffset.x * f.x, this.baseOffset.y * f.y, this.baseOffset.z * f.z));
+    }
     this.sofaVisual.enabled = isSofa;
     this.boxVisual.enabled = !isSofa;
     this.activeVisual = isSofa ? this.sofaVisual : this.boxVisual;
     this.boxVisual.getSceneObject().getTransform().setLocalScale(new vec3(s.box.length * CM, s.box.height * CM, s.box.depth * CM));
     const n = s.boxName.toLowerCase();
     this.bodyMaterial = this.solidMaterial.clone();
-    this.bodyMaterial.mainPass.baseColor = n.indexOf("wardrobe") >= 0 ? new vec4(0.85, 0.6, 0.35, 1) : n.indexOf("mattress") >= 0 ? new vec4(0.9, 0.92, 1, 1) : new vec4(0.6, 0.85, 0.9, 1);
+    this.bodyMaterial.mainPass.baseColor = this.bodyColor(n);
     this.activeVisual.mainMaterial = isSofa ? this.originalMaterial : this.bodyMaterial;
     this.showingGhost = false;
     this.touched = false;
@@ -107,7 +116,33 @@ export class PivotManeuver extends BaseScriptComponent {
       this.addProp(0.25, 0.57, 0, 0.012, 0.02, 0.94, cream);
       this.addProp(0, 0.57, -0.25, 0.92, 0.02, 0.012, cream);
       this.addProp(0, 0.57, 0.25, 0.92, 0.02, 0.012, cream);
+    } else if (n.indexOf("fridge") >= 0) {
+      this.addProp(0, 0.2, 0.5, 0.98, 0.012, 0.03, cream);
+      this.addProp(0.38, 0.38, 0.5, 0.025, 0.28, 0.06, cream);
+      this.addProp(0.38, -0.02, 0.5, 0.025, 0.36, 0.06, cream);
+    } else if (n.indexOf("piano") >= 0) {
+      this.addProp(0, 0.05, 0.5, 0.9, 0.09, 0.04, cream);
+      this.addProp(0, 0.5, 0, 1.02, 0.03, 1.02, cream);
+    } else if (n.indexOf("washing") >= 0) {
+      this.addProp(0, -0.05, 0.5, 0.62, 0.62, 0.03, new vec4(0.6, 0.85, 1, 1));
+      this.addProp(0, 0.4, 0.5, 0.7, 0.08, 0.03, cream);
+    } else if (n.indexOf("bookcase") >= 0) {
+      for (let i = 0; i < 5; i++) this.addProp(0, -0.4 + i * 0.2, 0.5, 0.94, 0.015, 0.03, cream);
+    } else if (n.indexOf("desk") >= 0 || n.indexOf("table") >= 0) {
+      this.addProp(0, 0.5, 0, 1.02, 0.1, 1.04, cream);
+    } else if (n.indexOf("bed") >= 0) {
+      this.addProp(0, 0.5, 0, 0.96, 0.12, 0.96, new vec4(0.8, 0.88, 1, 1));
+      this.addProp(-0.46, 0.2, 0, 0.06, 1.0, 1.02, cream);
     }
+  }
+
+  private bodyColor(n: string): vec4 {
+    if (n.indexOf("wardrobe") >= 0 || n.indexOf("bookcase") >= 0 || n.indexOf("desk") >= 0 || n.indexOf("table") >= 0) return new vec4(0.85, 0.6, 0.35, 1);
+    if (n.indexOf("mattress") >= 0 || n.indexOf("fridge") >= 0 || n.indexOf("washing") >= 0) return new vec4(0.9, 0.92, 1, 1);
+    if (n.indexOf("piano") >= 0) return new vec4(0.45, 0.35, 0.3, 1);
+    if (n.indexOf("armchair") >= 0) return new vec4(0.9, 0.55, 0.45, 1);
+    if (n.indexOf("treadmill") >= 0) return new vec4(0.55, 0.6, 0.7, 1);
+    return new vec4(0.6, 0.85, 0.9, 1);
   }
 
   private setProps(visible: boolean): void {
@@ -148,6 +183,8 @@ export class PivotManeuver extends BaseScriptComponent {
       const model = this.sofaVisual.getSceneObject().getTransform();
       const p = model.getLocalPosition();
       model.setLocalPosition(new vec3(p.x + origin.x - centre.x, p.y + origin.y - centre.y, p.z + origin.z - centre.z));
+      this.baseScale = model.getLocalScale();
+      this.baseOffset = model.getLocalPosition();
 
       const boxObject = global.scene.createSceneObject("Box model");
       boxObject.setParent(this.sofa);
