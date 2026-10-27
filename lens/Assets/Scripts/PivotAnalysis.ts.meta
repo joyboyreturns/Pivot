@@ -1,0 +1,70 @@
+- !<AssetImportMetadata/0e7f4c9b-8eb6-4fbe-a760-197def7b17da>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 34031d96-3015-4265-951f-9e87412338d9
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 34031d96-3015-4265-951f-9e87412338d9
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> f482af21-4b93-4d48-844c-641cfb699695
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/f482af21-4b93-4d48-844c-641cfb699695>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 610db967-0171-48f0-9851-74c51dd1a54e
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    doorDimensions: false
+    doorLeft: false
+    doorRight: false
+    restrictionLeft: false
+    restrictionRight: false
+    result: false
+    scan: false
+    switchDoor: false
+    switchVisual: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - result: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
+      scan: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      restrictionLeft: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      restrictionRight: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      doorLeft: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      doorRight: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      doorDimensions: !<reference.Text3D> 00000000-0000-0000-0000-000000000000
+      switchDoor: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      switchVisual: !<reference.RenderMeshVisual> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input Component.Text3D result
+    - // @input SceneObject scan
+    - // @input SceneObject restrictionLeft
+    - // @input SceneObject restrictionRight
+    - // @input SceneObject doorLeft
+    - // @input SceneObject doorRight
+    - // @input Component.Text3D doorDimensions
+    - // @input AssignableType_1 switchDoor
+    - // @input Component.RenderMeshVisual switchVisual

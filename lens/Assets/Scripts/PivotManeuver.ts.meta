@@ -1,0 +1,73 @@
+- !<AssetImportMetadata/d125cd38-5b6a-461f-98fd-e6e65e27d715>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 0653398e-fcc8-4e89-8fde-b3d9511bc1cb
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 0653398e-fcc8-4e89-8fde-b3d9511bc1cb
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 9622c025-7cea-48c1-a048-3ea301677c83
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/9622c025-7cea-48c1-a048-3ea301677c83>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 61a92486-5ef4-455a-bcce-102f55a5fb28
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    analysis: false
+    arrow: false
+    arrowVisual: false
+    doorDimensions: false
+    ghostMaterial: false
+    handleVisual: false
+    scrubber: false
+    sofa: false
+    sofaDimensions: false
+    sofaVisual: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - sofa: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      arrow: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      scrubber: !<MappingBased.AssignableType_2> 00000000-0000-0000-0000-000000000000
+      arrowVisual: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      handleVisual: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      sofaDimensions: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      doorDimensions: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      sofaVisual: !<reference.RenderMeshVisual> 00000000-0000-0000-0000-000000000000
+      ghostMaterial: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      analysis: !<MappingBased.AssignableType_3> 00000000-0000-0000-0000-000000000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - // @input SceneObject sofa
+    - // @input AssignableType_1 arrow
+    - // @input AssignableType_2 scrubber
+    - // @input SceneObject arrowVisual
+    - // @input SceneObject handleVisual
+    - // @input SceneObject sofaDimensions
+    - // @input SceneObject doorDimensions
+    - // @input Component.RenderMeshVisual sofaVisual
+    - // @input Asset.Material ghostMaterial
+    - // @input AssignableType_3 analysis
