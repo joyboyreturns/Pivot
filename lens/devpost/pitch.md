@@ -13,7 +13,7 @@ PIVOT plans the whole move at real scale, in the place where it happens.
 - Pick a scenario (pinch *Next scenario*): a studio-flat sofa, a wardrobe by lift, a mattress, a tight hallway corner.
 - See the route as gate chips: doorway, lift, corridor, L-shaped corner. Each chip is coloured by its verdict and the tightest gate carries a diamond.
 - Pinch a chip to look at that gate at its real size. The doorway frame, lift cabin, low corridor or L-shaped hall is drawn in front of you with a red, amber or green marker at the tightest point.
-- Step a ghost of the object through the plan (pinch the arrow) or scrub it (drag the rail): tip, turn, slide, swing round the corner.
+- The ghost replays the plan by itself (tip, turn, slide, swing round the corner); pinch the arrow to step it or drag the rail to scrub.
 - PIVOT says what it actually checked. A step is a **Verified step** only if the geometry was checked, including the room you need to turn it. Anything else, and every no-fit attempt, carries an **Unverified maneuver** label.
 
 Things a doorway-only check cannot tell you, which PIVOT does:
@@ -41,7 +41,7 @@ The sofa, the opening and the answer sit together at world scale where the move 
 
 ## What is real and what is not
 
-- Logic proven: the planner (60 tests) and the Lens flow (8 LEAF scenarios run in Lens Studio's Interactive Preview, mouse-simulated pinch).
+- Logic proven: the planner (60 tests) and the Lens flow (9 LEAF scenarios run in Lens Studio's Interactive Preview, mouse-simulated pinch).
 - Feel unproven: no SPECS device was available. Comfort, text legibility at reading distance on the real display, reach of the targets and hand-tracking reliability are untested.
 - Dimensions are supplied in advance; there is no room scanning or object recognition. Furniture is a bounding box, so a real sofa that compresses or has removable legs may fit where PIVOT says no.
 - Not modelled: stairs, wall thickness while tilting through, rotating inside a lift, doors that open.

@@ -20,7 +20,8 @@ Built for the Learn AR with SPECS challenge.
 
 - Pinch **Next scenario** to cycle scenarios.
 - Pinch a **gate chip** to look at one gate of the route; the chip colour and the diamond show the verdict and the bottleneck.
-- Pinch the **arrow** to step the ghost through the plan, or drag the **rail** to scrub back and forth.
+- After the analysis scan the ghost plays the maneuver by itself; pinch the **arrow** to step it or drag the **rail** to scrub, and your first touch takes over.
+- Labels turn to face you, so you can walk round the gate and still read them.
 - The doorway, lift cabin, corridor or L-shaped hall is drawn at real size (cm). A red, amber or green marker sits at the tightest point; a floor line shows where the room in front of the gate ends.
 - The label says "Verified step" only for steps that were checked and "Unverified maneuver" for illustration (including every no-fit attempt).
 
@@ -28,7 +29,7 @@ No SPECS device was available. Everything was run in Interactive Preview with mo
 
 ## Status
 
-Planner core and Lens experience working. 60 Vitest tests (`npm test`) and 8 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 60 Vitest tests (`npm test`) and 9 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

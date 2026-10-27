@@ -72,6 +72,8 @@ export class PivotAnalysis extends BaseScriptComponent {
   private switchMaterial!: Material;
   private root!: SceneObject;
   private stage!: SceneObject;
+  private camera: SceneObject | null = null;
+  private billboards: SceneObject[] = [];
 
   public scenarioIndex = 0;
   public gateIndex = 0;
@@ -81,6 +83,10 @@ export class PivotAnalysis extends BaseScriptComponent {
   public currentGate!: Gate;
   /** Bumps whenever the scenario or the selected gate changes, so the maneuver restarts. */
   public revision = 0;
+  /** True once the analysis scan has finished and the result is showing. */
+  public get ready(): boolean {
+    return this.finished;
+  }
 
   private find(name: string): SceneObject {
     const search = (o: SceneObject): SceneObject | null => {
@@ -177,7 +183,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     this.view.show(gate, plan, this.gateTone(plan));
     const stage = this.stage.getTransform();
     const plan3d = gate.kind === "corner";
-    stage.setLocalPosition(plan3d ? new vec3(45, 45, -300) : vec3.zero());
+    stage.setLocalPosition(plan3d ? new vec3(45, 25, -300) : vec3.zero());
     stage.setLocalRotation(plan3d ? quat.angleAxis(62 * Math.PI / 180, vec3.right()) : quat.quatIdentity());
     this.doorDimensions.text = describeGateShort(gate);
     this.result.text = this.resultText(gate, plan);
@@ -212,10 +218,11 @@ export class PivotAnalysis extends BaseScriptComponent {
     }
     place("Scenario switch target", 72, 246, 195);
     place("Scenario switch label", 50, 246, 195);
-    place("PIVOT No-fit Label", 0, 172, 200);
-    place("Gate Detail Label", 0, 152, 200);
-    place("Unverified Maneuver Label", 0, 138, 200);
-    place("Doorway Dimensions", 0, gate.kind === "corner" ? 118 : 192, gate.kind === "corner" ? 120 : 190);
+    const corner = gate.kind === "corner";
+    place("PIVOT No-fit Label", 0, corner ? 192 : 172, 200);
+    place("Gate Detail Label", 0, corner ? 175 : 152, 200);
+    place("Unverified Maneuver Label", 0, corner ? 162 : 138, 200);
+    place("Doorway Dimensions", 0, corner ? 148 : 192, corner ? 200 : 190);
   }
 
   onAwake(): void {
@@ -256,12 +263,20 @@ export class PivotAnalysis extends BaseScriptComponent {
       }
       this.switchMaterial = this.switchVisual.mainMaterial.clone();
       this.switchVisual.mainMaterial = this.switchMaterial;
+      this.switchVisual.getSceneObject().getTransform().setLocalScale(new vec3(8, 8, 8));
       this.switchDoor.onHoverStart.add(() => { this.switchMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
       this.switchDoor.onHoverEnd.add(() => { this.switchMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
       this.switchDoor.onTap.add(() => this.selectScenario(this.scenarioIndex + 1));
       this.text("Scenario switch label").text = "NEXT SCENARIO ›";
       this.result.getSceneObject().enabled = false;
       this.scan.enabled = false;
+      // Labels turn about the vertical to face the wearer, so they stay readable while walking round the gate.
+      const names = ["Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
+      this.billboards = names.map((n) => this.find(n));
+      for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
+        const o = global.scene.getRootObject(i);
+        if (o.getComponent("Component.Camera")) this.camera = o;
+      }
       this.selectScenario(this.startScenario);
       this.finished = false;
       this.elapsed = 0;
@@ -269,6 +284,14 @@ export class PivotAnalysis extends BaseScriptComponent {
     });
 
     this.createEvent("UpdateEvent").bind(() => {
+      if (this.camera) {
+        const eye = this.camera.getTransform().getWorldPosition();
+        for (const label of this.billboards) {
+          const t = label.getTransform();
+          const p = t.getWorldPosition();
+          t.setWorldRotation(quat.angleAxis(Math.atan2(eye.x - p.x, eye.z - p.z), vec3.up()));
+        }
+      }
       if (this.finished) return;
       this.elapsed += getDeltaTime();
       const span = this.scanEnd - SCAN_START;

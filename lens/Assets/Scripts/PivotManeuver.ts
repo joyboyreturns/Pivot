@@ -21,6 +21,9 @@ export class PivotManeuver extends BaseScriptComponent {
   @input ghostMaterial!: Material;
   @input solidMaterial!: Material;
   @input boxMesh!: RenderMesh;
+  @input propMaterial!: Material;
+  /** Plays the maneuver once by itself after each analysis; the first pinch or drag takes over. */
+  public autoPlay = true;
   @input warning!: Text3D;
   @input analysis!: PivotAnalysis;
   private originalMaterial!: Material;
@@ -38,6 +41,10 @@ export class PivotManeuver extends BaseScriptComponent {
   private railZ = 0;
   private revision = -1;
   private lastLabel = "";
+  private props: SceneObject[] = [];
+  private bodyMaterial!: Material;
+  private touched = false;
+  private autoClock = 0;
 
   /** Number of step intervals the arrow and rail move through. */
   private stepCount(plan: Plan): number {
@@ -59,9 +66,52 @@ export class PivotManeuver extends BaseScriptComponent {
     this.boxVisual.enabled = !isSofa;
     this.activeVisual = isSofa ? this.sofaVisual : this.boxVisual;
     this.boxVisual.getSceneObject().getTransform().setLocalScale(new vec3(s.box.length * CM, s.box.height * CM, s.box.depth * CM));
-    this.activeVisual.mainMaterial = isSofa ? this.originalMaterial : this.solidMaterial;
+    const n = s.boxName.toLowerCase();
+    this.bodyMaterial = this.solidMaterial.clone();
+    this.bodyMaterial.mainPass.baseColor = n.indexOf("wardrobe") >= 0 ? new vec4(0.85, 0.6, 0.35, 1) : n.indexOf("mattress") >= 0 ? new vec4(0.9, 0.92, 1, 1) : new vec4(0.6, 0.85, 0.9, 1);
+    this.activeVisual.mainMaterial = isSofa ? this.originalMaterial : this.bodyMaterial;
     this.showingGhost = false;
+    this.touched = false;
+    this.autoClock = 0;
+    this.buildProps(s.boxName);
     (this.sofaDimensions.getComponent("Component.Text3D") as Text3D).text = s.boxName.toUpperCase();
+  }
+
+  private addProp(x: number, y: number, z: number, w: number, h: number, d: number, color: vec4): void {
+    const object = global.scene.createSceneObject("Box detail");
+    object.setParent(this.boxVisual.getSceneObject());
+    const visual = object.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
+    visual.mesh = this.boxMesh;
+    const material = this.propMaterial.clone();
+    material.mainPass.baseColor = color;
+    visual.mainMaterial = material;
+    object.getTransform().setLocalPosition(new vec3(x, y, z));
+    object.getTransform().setLocalScale(new vec3(w, h, d));
+    this.props.push(object);
+  }
+
+  /** Light details so a box reads as a wardrobe or a mattress; they sit in unit-cube space of the scaled box. */
+  private buildProps(name: string): void {
+    for (const p of this.props) p.destroy();
+    this.props = [];
+    const n = name.toLowerCase();
+    const cream = new vec4(1, 0.92, 0.75, 1);
+    if (n.indexOf("wardrobe") >= 0) {
+      this.addProp(0, 0, 0.5, 0.012, 0.94, 0.03, cream);
+      this.addProp(-0.07, 0.02, 0.5, 0.018, 0.14, 0.05, cream);
+      this.addProp(0.07, 0.02, 0.5, 0.018, 0.14, 0.05, cream);
+      this.addProp(0, 0.5, 0, 1.02, 0.02, 1.02, cream);
+    } else if (n.indexOf("mattress") >= 0) {
+      this.addProp(0, 0.5, 0, 0.92, 0.12, 0.94, new vec4(0.75, 0.88, 1, 1));
+      this.addProp(-0.25, 0.57, 0, 0.012, 0.02, 0.94, cream);
+      this.addProp(0.25, 0.57, 0, 0.012, 0.02, 0.94, cream);
+      this.addProp(0, 0.57, -0.25, 0.92, 0.02, 0.012, cream);
+      this.addProp(0, 0.57, 0.25, 0.92, 0.02, 0.012, cream);
+    }
+  }
+
+  private setProps(visible: boolean): void {
+    for (const p of this.props) p.enabled = visible;
   }
 
   private warningText(plan: Plan, step: number): string {
@@ -69,8 +119,10 @@ export class PivotManeuver extends BaseScriptComponent {
     if (this.target < 0.005 && this.progress < 0.005) return (plan.verified ? "EVERY STEP CHECKED" : "UNVERIFIED MANEUVER") + "\n" + HINT;
     const s = plan.steps[step];
     const head = s.verified ? "VERIFIED STEP" : "UNVERIFIED MANEUVER";
-    const spare = s.clearance !== null && s.clearance < 100 ? ` · ${Math.max(0, Math.round(s.clearance * 100))} CM SPARE` : "";
-    return `${head}\n${s.hint.toUpperCase()}${spare}`;
+    const hint = s.hint.toUpperCase();
+    const spare = hint.indexOf("TO SPARE") < 0 && s.clearance !== null ? ` · ${Math.max(0, Math.round(s.clearance * 100))} CM SPARE` : "";
+    const body = hint.length + spare.length > 46 ? hint.replace(": ", "\n") : hint;
+    return `${head}\n${body}${spare}`;
   }
 
   private place(frame: Frame): void {
@@ -115,6 +167,7 @@ export class PivotManeuver extends BaseScriptComponent {
       this.railY = rail.y;
       this.railZ = rail.z;
       this.arrow.onTap.add(() => {
+        this.touched = true;
         const count = this.stepCount(this.analysis.currentPlan);
         const limit = this.limit();
         if (this.target >= limit - 0.001) {
@@ -127,7 +180,7 @@ export class PivotManeuver extends BaseScriptComponent {
       this.arrow.onHoverEnd.add(() => { this.arrowVisual.getTransform().setLocalScale(new vec3(16, 16, 16)); this.arrowMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
       this.scrubber.onHoverStart.add(() => { this.handleMaterial.mainPass.baseColor = new vec4(0.6, 1, 1, 1); });
       this.scrubber.onHoverEnd.add(() => { this.handleMaterial.mainPass.baseColor = new vec4(0.32, 0.53, 0.58, 1); });
-      this.scrubber.onDragStart.add(() => { this.dragging = true; this.handleVisual.getTransform().setLocalScale(new vec3(14, 14, 14)); });
+      this.scrubber.onDragStart.add(() => { this.touched = true; this.dragging = true; this.handleVisual.getTransform().setLocalScale(new vec3(14, 14, 14)); });
       this.scrubber.onDragEnd.add(() => { this.dragging = false; this.handleVisual.getTransform().setLocalScale(new vec3(10, 10, 10)); });
       this.scrubber.onDragUpdate.add(() => {
         const t = this.scrubber.getSceneObject().getTransform();
@@ -142,13 +195,19 @@ export class PivotManeuver extends BaseScriptComponent {
       if (!this.analysis.currentPlan || !this.boxVisual) return;
       if (this.revision !== this.analysis.revision) this.applyRevision();
       const plan = this.analysis.currentPlan;
+      if (this.autoPlay && !this.touched && this.analysis.ready && !this.dragging) {
+        this.autoClock += getDeltaTime();
+        const run = Math.max(1, this.stepCount(plan)) * 1.4;
+        if (this.autoClock > 0.8) this.target = Math.min(this.limit(), (this.autoClock - 0.8) / run);
+      }
       const blend = Math.min(1, getDeltaTime() * 4);
       this.progress += (this.target - this.progress) * blend;
       const showGhost = this.progress > 0.01 || this.target > 0;
       if (showGhost !== this.showingGhost) {
         const isSofa = this.activeVisual === this.sofaVisual;
-        this.activeVisual.mainMaterial = showGhost ? this.ghostMaterial : isSofa ? this.originalMaterial : this.solidMaterial;
+        this.activeVisual.mainMaterial = showGhost ? this.ghostMaterial : isSofa ? this.originalMaterial : this.bodyMaterial;
         this.showingGhost = showGhost;
+        this.setProps(!showGhost && !isSofa);
       }
       this.place(frameAt(plan, this.progress));
 

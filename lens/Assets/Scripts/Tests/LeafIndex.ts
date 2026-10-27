@@ -8,6 +8,7 @@ import { PivotGateScenario } from "./PivotGateScenario";
 import { PivotVerifiedScenario } from "./PivotVerifiedScenario";
 import { PivotCornerScenario } from "./PivotCornerScenario";
 import { PivotBoxScenario } from "./PivotBoxScenario";
+import { PivotAutoplayScenario } from "./PivotAutoplayScenario";
 
 @component
 export class LeafIndex extends BaseScriptComponent {
@@ -21,5 +22,6 @@ export class LeafIndex extends BaseScriptComponent {
     { id: "pivot-verified-vs-unverified", typename: PivotVerifiedScenario.getTypeName() },
     { id: "pivot-corner-turn", typename: PivotCornerScenario.getTypeName() },
     { id: "pivot-box-and-lift", typename: PivotBoxScenario.getTypeName() },
+    { id: "pivot-autoplay", typename: PivotAutoplayScenario.getTypeName() },
   ];
 }

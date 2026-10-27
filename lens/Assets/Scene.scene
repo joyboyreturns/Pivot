@@ -1447,6 +1447,7 @@
       ghostMaterial: !<reference.Material> 0d7edbd6-7534-4cd6-85fb-64c3e03507a4
       solidMaterial: !<reference.Material> bfa86876-dd74-4648-83ef-e88646e416ae
       boxMesh: !<reference.RenderMesh> 5c01ca0b-762b-4cea-8916-6ae84de7841f
+      propMaterial: !<reference.Material> 4cc60955-996a-43d2-aab5-8adfe12edf9b
       warning: !<reference.Text3D> c76097fa-a3e9-4d3e-a1ac-0b66739d2491
       analysis: !<MappingBased.AssignableType_3> 1910438e-1baf-452b-99c6-4090c9850483
   ScriptTypes:

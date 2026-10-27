@@ -56,7 +56,7 @@ export const scenarios: Scenario[] = [
   },
   {
     id: "narrow-hall",
-    title: "Door fits, hall does not",
+    title: "Door fits, hall not",
     boxName: "3-seat sofa 210 x 85 x 90 cm",
     box: studioSofa,
     gates: [entrance(1.0), flatDoor(0.95, 1.2)],
@@ -116,7 +116,7 @@ export const scenarios: Scenario[] = [
   },
   {
     id: "service-corridor",
-    title: "Wardrobe down a low corridor",
+    title: "Wardrobe, low corridor",
     boxName: "Wardrobe 100 x 200 x 60 cm",
     box: furniture.wardrobe!,
     gates: [

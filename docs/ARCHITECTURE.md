@@ -81,7 +81,8 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 |---|---|
 | `PivotAnalysis` | Holds the scenario and selected gate, runs `planRoute`, writes the labels (title, story, route verdict, result, detail), keeps gate chips, restarts the brief scan on each change. Pinch Next scenario cycles. |
 | `PivotGateView` | Pool of box panels built at runtime from the gate: doorway frame, corridor walls, lift cabin, cutaway L-hall, floor line for the approach limit, a tone-coloured bottleneck marker. |
-| `PivotManeuver` | Ghost playback from `frameAt`; the object rotates about the middle of its volume and rests on the floor. Sofa mesh for sofas, a real-size box otherwise. Arrow steps, rail scrubs, label says verified step or Unverified maneuver. |
+| `PivotManeuver` | Ghost playback from `frameAt`; the object rotates about the middle of its volume and rests on the floor. Sofa mesh for sofas, a real-size box with details (wardrobe doors, mattress quilting) otherwise. Replays the maneuver by itself after each analysis (`autoPlay`); the first pinch or drag takes over. Arrow steps, rail scrubs, label says verified step or Unverified maneuver. |
+| Labels | Billboarded about the vertical toward the wearer's head so they read from any side. |
 | L-turn view | The room hangs off a `Stage` object tipped 62 degrees toward the viewer so the plan is readable from standing height. |
 
 Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with the mouse in Interactive Preview and with hands on device. The display is additive: text is light, nothing relies on dark colours.
@@ -89,7 +90,7 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 ## Testing
 
 - Vitest (60 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
-- LEAF (8 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift.
+- LEAF (9 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay.
 
 ## Not modelled (cut first)
 

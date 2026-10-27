@@ -28,13 +28,14 @@ Target: submit **8 Nov 2026**. The official deadline for Learn AR with SPECS is 
 - [x] Real-size gate view: doorway, corridor, lift cabin, L-shaped hall
 - [x] Ghost playback from the plan, pinch arrow and drag rail
 - [x] Verified step / Unverified maneuver label, per step
-- [x] 8 LEAF scenarios passing in Preview
+- [x] 9 LEAF scenarios passing in Preview
+- [x] Hands-free replay after each analysis, camera-facing labels, wardrobe and mattress details
 - Done when: the full flow runs in Preview. Met in Interactive Preview with mouse-simulated pinch.
 
 ## Step 4: Polish (4-6 Nov)
 
-- [ ] Walk around the preview with WASD and fix anything cramped or hard to read; the L-turn view and the text stack are the likeliest
-- [ ] Sound cues, no-fit state, nicer box objects (wardrobe, mattress)
+- [x] Walk-around check with the preview camera (orbit), L-turn framing, text stack, switch size, long titles
+- [ ] Sound cues (none yet: no audio assets added)
 - [ ] Record the video (under 3 minutes, public on YouTube), capture images, write the Devpost description from `lens/devpost/pitch.md`
 - Done when: video and images are ready.
 

@@ -1,6 +1,7 @@
 import { expect } from "Leaf.lspkg/Utils/common/Expect";
 import { findSceneObjectByName, sleep } from "Leaf.lspkg/Utils/common/Utils";
 import { findInteractablesByName } from "Leaf.lspkg/Interactors/InteractableUtils";
+import type { PivotManeuver } from "../PivotManeuver";
 import { DefaultLeafInteractor } from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor";
 
 export const SCENARIO_COUNT = 7;
@@ -17,6 +18,9 @@ export async function tap(name: string): Promise<void> {
 
 /** Pinch the scenario switch until scenario `n` (1-based) is showing, then let the analysis scan finish. */
 export async function goToScenario(n: number): Promise<void> {
+  // The tests drive the ghost themselves, so switch off the hands-free replay.
+  const maneuver = findSceneObjectByName("PIVOT Maneuver").getComponent("Component.ScriptComponent") as unknown as PivotManeuver;
+  maneuver.autoPlay = false;
   for (let i = 0; i <= SCENARIO_COUNT && textOf("Scenario Title").indexOf(n + "/") !== 0; i++) {
     await tap("Scenario switch target");
     await sleep(300);
