@@ -28,6 +28,13 @@ export const textWidth = (text: string, size: number): number => {
   return longest * size * 0.0155;
 };
 
+/** A gap or margin as text: whole centimetres, but millimetres under 1 cm so a real 4 mm margin never reads "0 CM". */
+export const lengthText = (m: number): string => {
+  const d = Math.abs(m);
+  if (d > 0 && d < 0.01) return `${Math.max(1, Math.round(d * 1000))} MM`;
+  return `${Math.round(d * 100)} CM`;
+};
+
 export const RAIL_HALF = 16;
 
 /**
@@ -41,9 +48,12 @@ export const FRONT_Z = TABLE_Z + 27;
 export const tokenAt = (i: number): vec3 => W(-22 + i * 15, TABLE_TOP - 2, FRONT_Z);
 export const tokenLabelAt = (i: number): vec3 => W(-22 + i * 15 + 7, TABLE_TOP - 2, FRONT_Z);
 
-/** The scrub rail under the tokens and the next-step arrow at its right end. */
+/**
+ * The scrub rail under the tokens and the next-step arrow past its right end. The rail's handle is 16 cm wide, so at the
+ * end of the rail it reaches x = RAIL_HALF + 8; the arrow sits beyond that so it can still be pinched to replay.
+ */
 export const RAIL_AT = (): vec3 => W(0, TABLE_TOP - 5.5, FRONT_Z);
-export const ARROW_AT = (): vec3 => W(19, TABLE_TOP - 5.5, FRONT_Z);
+export const ARROW_AT = (): vec3 => W(RAIL_HALF + 13, TABLE_TOP - 5.5, FRONT_Z);
 
 /** Left column: modes and sandbox buttons. Right column: steppers. */
 export const leftColumn = (row: number): number => 14 - row * 6;

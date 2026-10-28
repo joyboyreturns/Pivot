@@ -2,6 +2,7 @@ import { extents, frameAt, maxProgress } from "./Planner/index";
 import type { Gate, Plan, Scenario } from "./Planner/index";
 import { poseTransform } from "./PivotPose";
 import { TONES } from "./PivotGateView";
+import { lengthText } from "./PivotLayout";
 import type { Tone } from "./PivotGateView";
 
 const CM = 100;
@@ -103,7 +104,7 @@ export class StageFx {
     for (const l of this.labels) l.getSceneObject().enabled = false;
     const color = TONES[tone];
     if (gate.kind === "corner") {
-      if (plan.turn) this.tag(0, new vec3(0, 56, 0), `${Math.max(0, Math.round(plan.clearance * 100))} CM`);
+      if (plan.turn) this.tag(0, new vec3(0, 56, 0), lengthText(Math.max(0, plan.clearance)));
     } else if (plan.fits) {
       const pass = plan.steps[plan.steps.length - 1];
       const e = extents(scenario.box, pass.pose);

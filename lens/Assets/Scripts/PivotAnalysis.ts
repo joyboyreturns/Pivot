@@ -5,7 +5,7 @@ import { StageFx } from "./PivotStageFx";
 import { TapInteraction } from "./TapInteraction";
 import { GateView, TONES, toneFor } from "./PivotGateView";
 import { Sandbox, wireButton } from "./PivotSandbox";
-import { ARROW_AT, MODEL_SCALE, RAIL_AT, RAIL_HALF, SIZES, TABLE_TOP, TABLE_Z, W, textWidth, tokenAt, tokenLabelAt } from "./PivotLayout";
+import { ARROW_AT, MODEL_SCALE, RAIL_AT, RAIL_HALF, SIZES, TABLE_TOP, TABLE_Z, W, lengthText, textWidth, tokenAt, tokenLabelAt } from "./PivotLayout";
 import type { Tone } from "./PivotGateView";
 
 const CM = 100;
@@ -29,7 +29,7 @@ function wrap(text: string, width: number): string {
   return lines.join("\n");
 }
 
-const cm = (m: number) => `${Math.round(Math.abs(m) * 100)} CM`;
+const cm = lengthText;
 const metres = (m: number) => `${m.toFixed(2)} M`;
 
 export function describeGateShort(gate: Gate): string {
@@ -344,11 +344,13 @@ export class PivotAnalysis extends BaseScriptComponent {
       put("Scenario Title", 0, 22);
       put("Scenario Story", 0, 17.5);
       put("PIVOT No-fit Label", 0, 12);
-      put("Route Verdict Label", 0, 6.5);
+      put("Route Verdict Label", 0, 8);
     }
     const k = this.lifeSize ? 3 : 1;
     for (const n of ["Scenario Title", "Scenario Story", "PIVOT No-fit Label", "Route Verdict Label"]) this.find(n).getTransform().setLocalScale(new vec3(k, k, k));
-    put("Gate Detail Label", 22, this.sandbox.active ? -19 : 7.5);
+    // In Your move the detail sits low on the right, above the spot where an L-hall's width handle hovers. It cannot
+    // move further right: its longest line already reaches the edge of the display at x = 22.
+    put("Gate Detail Label", 22, this.sandbox.active ? -16 : 7.5);
     for (let i = 0; i < 2; i++) {
       const y = this.sandbox.active ? -15 - i * 6.5 : -1 - i * 8;
       this.find(`Fix tag ${i + 1}`).getTransform().setLocalPosition(W(15, y, -108));
@@ -358,7 +360,13 @@ export class PivotAnalysis extends BaseScriptComponent {
     rail.setLocalPosition(RAIL_AT());
     rail.setLocalScale(new vec3(RAIL_HALF * 2, 0.5, 0.5));
     put("Doorway Dimensions", 22, this.sandbox.active ? 20 : 14);
-    put("Sofa Dimensions", 22, this.sandbox.active ? 40 : -17);
+    // The object's name sits low and to the right, where an L-hall's outer wall passes in front of it. Slide it along
+    // its line of sight to the eye (the origin) until it is just in front of the table's front edge: same place and
+    // apparent size on screen, drawn over the wall.
+    const pull = (TABLE_Z + 30) / TABLE_Z;
+    const name = this.find("Sofa Dimensions").getTransform();
+    put("Sofa Dimensions", 22 * pull, (this.sandbox.active ? 40 : -17) * pull, TABLE_Z * pull);
+    name.setLocalScale(new vec3(pull, pull, pull));
     for (let i = 0; i < MAX_CHIPS; i++) {
       this.find(`Gate chip ${i + 1}`).getTransform().setLocalPosition(tokenAt(i));
       this.find(`Gate chip label ${i + 1}`).getTransform().setLocalPosition(tokenLabelAt(i));

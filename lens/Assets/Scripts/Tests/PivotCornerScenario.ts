@@ -11,7 +11,8 @@ export class PivotCornerScenario extends Scenario {
     await goToScenario(5);
     check(has(textOf("Doorway Dimensions"), "L-TURN"), "has(textOf('Doorway Dimensions'), 'L-TURN')");
     check(has(textOf("Route Verdict Label"), "ONLY JUST"), "has(textOf('Route Verdict Label'), 'ONLY JUST')");
-    check(has(textOf("PIVOT No-fit Label"), "1 CM TO SPARE"), "has(textOf('PIVOT No-fit Label'), '1 CM TO SPARE')");
+    // The corner clears by 0.6 cm: shown in millimetres, not rounded up to a whole centimetre.
+    check(has(textOf("PIVOT No-fit Label"), "6 MM TO SPARE"), "the corner margin reads in millimetres", textOf("PIVOT No-fit Label"));
     check(has(textOf("Gate Detail Label"), "47° INTO THE TURN"), "has(textOf('Gate Detail Label'), '47° INTO THE TURN')");
     check(!(findSceneObjectByName("Doorway left wall").enabled), "findSceneObjectByName('Doorway left wall').enabled");
     check(!(findSceneObjectByName("Restriction left").enabled), "findSceneObjectByName('Restriction left').enabled");

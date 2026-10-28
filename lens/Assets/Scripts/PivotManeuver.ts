@@ -4,7 +4,7 @@ import { PivotAnalysis } from "./PivotAnalysis";
 import { ObjectModel } from "./PivotObjectModel";
 import { extents, frameAt, gateHandles, maxProgress } from "./Planner/index";
 import { poseTransform } from "./PivotPose";
-import { ARROW_AT, RAIL_AT, RAIL_HALF } from "./PivotLayout";
+import { ARROW_AT, RAIL_AT, RAIL_HALF, lengthText } from "./PivotLayout";
 import type { Frame, Plan } from "./Planner/index";
 
 const CM = 100;
@@ -13,6 +13,8 @@ const HINT = "PINCH ARROW  •  PULL AN EDGE";
 /** Step label against a gate handle, in room cm: half the label's width plus the handle's, and half their heights plus a margin. */
 const LABEL_REACH = 55;
 const LABEL_CLEAR = 32;
+/** The wall panels around a doorway, corridor or lift are 15 cm deep and centred on the gate plane; the label stays in front of them. */
+const LABEL_FRONT = 12;
 
 @component
 export class PivotManeuver extends BaseScriptComponent {
@@ -113,13 +115,18 @@ export class PivotManeuver extends BaseScriptComponent {
     return y;
   }
 
+  /** Depth for the step label: at the ghost, but never inside the wall panels, which would hide the text beyond the opening. */
+  private labelDepth(z: number): number {
+    return this.analysis.currentGate.kind === "corner" ? z : Math.max(z, LABEL_FRONT);
+  }
+
   private warningText(plan: Plan, step: number): string {
     if (!plan.fits) return "UNVERIFIED MANEUVER\nILLUSTRATION ONLY · IT DOES NOT FIT";
     if (this.target < 0.005 && this.progress < 0.005) return (plan.verified ? "EVERY STEP CHECKED" : "UNVERIFIED MANEUVER") + "\n" + HINT;
     const s = plan.steps[step];
     const head = s.verified ? "VERIFIED STEP" : "UNVERIFIED MANEUVER";
     const hint = s.hint.toUpperCase();
-    const spare = hint.indexOf("TO SPARE") < 0 && s.clearance !== null ? ` · ${Math.max(0, Math.round(s.clearance * 100))} CM SPARE` : "";
+    const spare = hint.indexOf("TO SPARE") < 0 && s.clearance !== null ? ` · ${lengthText(Math.max(0, s.clearance))} SPARE` : "";
     const body = hint.length + spare.length > 46 ? hint.replace(": ", "\n") : hint;
     return `${head}\n${body}${spare}`;
   }
@@ -220,7 +227,7 @@ export class PivotManeuver extends BaseScriptComponent {
       const ghost = this.sofa.getTransform().getLocalPosition();
       const top = extents(this.analysis.scenario.box, frameAt(plan, this.progress).pose).y * 50 + 26;
       const tag = this.warning.getSceneObject().getTransform();
-      const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), ghost.z));
+      const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), this.labelDepth(ghost.z)));
       if (!this.analysis.isLifeSize) tagPosition.y = Math.min(-5, tagPosition.y);
       tag.setWorldPosition(tagPosition);
       const k = this.analysis.isLifeSize ? 3 : 1;

@@ -79,8 +79,8 @@ Looked at scenarios 4, 7, 8, 9 (blocked and "Try another route"), 10, 11 and 12,
 ### Issues seen, not fixed
 1. FIXED (see "Session 3 fixes"): chip row covered by the hall-depth handle and limit bar.
 2. FIXED (see "Session 3 fixes"): aquarium step label covered by the gate width handle. Not confirmed visually.
-3. The handle guide line and a cyan handle show in almost every scenario even with the mouse elsewhere; I did not establish whether that is the preview's simulated hand hovering them or a stale hover state.
-4. 10/12 reads "FITS - 0 CM TO SPARE" for a route the story calls "only just". Not checked whether the planner value rounds from a small positive number; worth a look before the demo.
+3. RESOLVED (not a bug, see "Session 4"): the cyan line and hexagon are the hall-limit bar and the "room to turn" handle.
+4. FIXED in the working tree (see "Session 4"): "0 CM TO SPARE" wording on scenario 10.
 
 ### Still unverified or never tested
 - Nothing has run on real glasses. Preview with mouse-simulated pinch only.
@@ -94,3 +94,46 @@ Looked at scenarios 4, 7, 8, 9 (blocked and "Try another route"), 10, 11 and 12,
 - Re-run after the change: all 12 LEAF scenarios PASSED again (16:35; box-and-lift also alone at 16:40). Lens Studio recompiled cleanly. No planner change, so no sync; unit tests and typecheck were not affected.
 - Visual check: the corridor scenario (7, 2.6 m hall) now shows the handle and its line clearly above the chip label. The gallery-loading route and the aquarium were not re-viewed after the fix (the Preview stopped responding to my clicks when Lens Studio was in the background), so those two are verified by reasoning and the passing tests only.
 - Still open: items 3 and 4 above (always-on handle line; "0 CM" fit wording on scenario 10).
+
+## Session 4 notes (28 October 2026, 16:45-16:55) - uncommitted
+
+- The cyan floor line with a hexagon at its left end, seen in almost every scenario, is by design: `PivotGateView.approachBar` draws the limit of the room in front of the gate (260 cm wide, red when the turn is blocked) and the planner's hall-depth handle sits at its left end (x = -1.15 m). The handle's drag guide line only draws while a handle is hovered or dragged. No code change.
+- Scenario 10 ("A millimetre matters"): the planner's route clearance is 0.40 cm (the corner scenario is 0.58 cm), a genuine fit, but the label rounded it to "0 CM TO SPARE". Added `lengthText` in `PivotLayout.ts` (millimetres under 1 cm, otherwise whole cm) and used it in `PivotAnalysis` (verdict, result, story), `PivotManeuver` (step spare) and `PivotStageFx` (corner tag). The corner LEAF assertion now expects "6 MM TO SPARE" instead of "1 CM TO SPARE"; the product is more precise, the check is not weaker.
+- Lens Studio recompiled these edits cleanly (16:47:58). Unit tests 107/107 and typecheck pass; no planner change, so no sync.
+- NOT verified: the LEAF run after this change, and the aquarium and gallery-route visual check. Lens Studio stopped accepting clicks from the control tool ("could not read which file this window is editing") right after the edit, so the rerun did not start. `pivot-corner-turn` is the one scenario expected to be affected (its wording changed); rerun all 12 by hand before committing.
+- Nothing from this session is committed or pushed (the previous push was commit c8677f9).
+- Retry at 17:00: both the background tools and full-screen control were refused by the control tool's guard ("could not verify which document this window is editing"), including after bringing Lens Studio to the front. Lens Studio's log has no entries after 16:48:00 except adb timeouts, no script errors, and the Preview frame has not changed since the 16:47 reload; the process sits at 145-175% CPU. I did not force-quit it because the project shows unsaved changes (`lens*`). The `lengthText` helper was checked outside Lens Studio: 0.40 cm -> "4 MM", 0.58 cm -> "6 MM", 5 cm -> "5 CM", 0 -> "0 CM". So the LEAF rerun and the aquarium / gallery visual checks are still pending, and whether the 16:47 reload left Lens Studio stuck or it is just busy is unknown.
+
+## Session 5 notes (28 October 2026, 17:05-17:58) - uncommitted
+
+### Access
+Lens Studio MCP tools were available (`run_leaf_scenario`, `PreviewInteractTool`, `PreviewPanelTool`, `QueryRuntimeSceneTool`, `RecompileTypeScriptTool`); no raw HTTP and no GUI control tool was used. Newest log: `LensStudioLog-2026-10-28-17-02-19-847-e8b44.txt`. The scene and Project files were not saved; `git status` shows no `Scene.scene` or `.meta` changes.
+
+### LEAF results (Preview)
+- First pass on the code as handed over (17:22-17:27): all 12 PASSED.
+- Final pass on the code below (17:45-17:58): all 12 PASSED, 0 FAILED / CHECK FAILED lines in the log. `pivot-handles` was aborted once at 17:54:37 by "Widget is not initialized" (right after "Handling authorized tokens", an environment event); the rerun PASSED at 17:57:55. Several runs take 25-47 s now and the MCP call times out on them while the scenario keeps running, so read results from the log, not the call result.
+- `npm test` 107/107, `npm run typecheck` pass, `npm run sync` copied 18 files with no change under `src/planner` (no planner change this session).
+
+### Visual checks (Preview screenshots via `PreviewPanelTool`)
+- 9 blocked ("Art takes another route") and 9 after "Try another route" (Gallery loading): the cyan hall-limit bar and its handle sit above the chip row. The handle's lower point is within a few pixels of the first chip label ("LOADING DOOR") but covers nothing.
+- 10 ("A millimetre matters"): reads "FITS · 4 MM TO SPARE", route line "BENCH CORNER 4 MM", corner tag "4 MM". No "0 CM".
+- 11 aquarium: the gate width handle no longer covers the step label (the Session 3 fix holds).
+- Workbench at rest and in playback, fridge-freezer in Your move (at rest and in playback), delivery crate, Swap object (works; the pinch call timed out but the swap applied and the scenario became "Your move"), sandbox steppers and chips with the new objects, object chip switching the steppers to LENGTH / HEIGHT / DEPTH.
+
+### Fixes this session (all in `lens/Assets/Scripts`, Lens Studio compiled each cleanly)
+1. Step label hidden by the wall (found on the aquarium): the label sat at the ghost's depth, which at the pass step is inside the 15 cm wall panels, so the text outside the opening vanished ("TURN" and "SPARE" cut off). `PivotManeuver.labelDepth` keeps it at z >= `LABEL_FRONT` (12) for doorway, corridor and lift gates. Verified: it now reads "NOW TURN IT 90 DEGREES: 28 CM TO SPARE".
+2. Replay arrow unreachable at the end of playback: the timeline handle (16 cm wide) at the right end of the rail covered the arrow (x 19), and `PreviewInteractTool` reported "Blocked by Timeline handle". `ARROW_AT` is now at `RAIL_HALF + 13` (x 29), still inside the +-36 cm field. Verified: the arrow pinch works after playback ends.
+3. Object name label ("WORKSHOP BENCH 160 X 90 X 75 CM") cut by the L-hall's outer wall: `PivotAnalysis.layout` now slides it along its line of sight to the eye (the origin) to just in front of the table edge, same place and apparent size on screen. Verified on scenario 10 and 1. (A first attempt in `PivotManeuver` was overridden by `layout`, which re-places that label; it was reverted.)
+4. Route summary raised from y 6.5 to 8 so tall objects stop clipping its last line. Verified on scenario 1 and the sandbox; the fridge case was seen before the change, not after.
+5. Sandbox detail callout ("TIGHTEST 45° INTO THE TURN") raised 3 cm (y -19 to -16) to sit above the L-hall width handle. Not re-viewed with an L-turn after this change; only the doorway sandbox was re-viewed. A first attempt (shifting it 5 cm right) pushed its long line off the display edge ("DEE" cut off) and was reverted; the LEAF suite did not catch that, so the display-edge limit is not asserted anywhere.
+
+### Open readability problems (not fixed)
+- Tall objects (fridge, wardrobe, bookcase, art crate) at rest fill the space between the table and the route summary at the fixed 1:10 scale. The white "EVERY STEP CHECKED / PINCH ARROW · PULL AN EDGE" hint sits on the pale model body and is hard to read (seen on the fridge and the bench). The step label is clamped to y <= -5, which keeps it below the summary but puts it on the object. A proper fix is a layout or scale decision (model scale per height, a different label place, or darker model colours), and the LEAF move-table checks assert the current scale, so I left it for the owner. `Text3D` has no outline or background setting.
+- In the blocked door view the "UNVERIFIED MANEUVER / ILLUSTRATION ONLY" label is crossed by the red jamb lines (readable). On the aquarium the "14 CM" side numbers are crossed by the green jamb lines (readable). On the gallery crate the right width handle can sit over the "4.3 CM" side number during playback.
+- The step label on L-turns ("CARRY IT DOWN THE HALL") can touch the hall-width handle.
+
+### Still unverified
+- Nothing has run on real glasses. Preview with simulated pinch only; no sound cues, demo video or refreshed screenshots.
+- Not viewed at rest: flight case, wardrobe, washing machine, bookcase and other presets beyond the bench, fridge, crate and sofa. Life-size view with the new models. Fix 5 on an L-turn.
+- The model checks gate cross-sections and sampled corner sweeps (Next actions item 4 above); this is not a claim that the project is bug-free.
+- Nothing is committed or pushed (last push c8677f9). Working-tree changes: HANDOFF.md, PivotAnalysis.ts, PivotLayout.ts, PivotManeuver.ts, PivotStageFx.ts, Tests/PivotCornerScenario.ts.
