@@ -300,6 +300,11 @@ export class PivotAnalysis extends BaseScriptComponent {
     this.sandbox.dragHandle(from, delta);
   }
 
+  /** The maneuver tells whether the object is at rest at its start, where its handles are. */
+  public setAtStart(atStart: boolean): void {
+    if (this.handles) this.handles.boxVisible = atStart;
+  }
+
   /** Move a handle from code the way a hand would (used by the tests). */
   public dragHandle(key: string, stagePoint: vec3): boolean {
     return this.handles.dragTo(key, stagePoint);

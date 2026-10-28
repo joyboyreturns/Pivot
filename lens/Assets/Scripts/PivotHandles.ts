@@ -38,6 +38,10 @@ export class Handles {
   private shownLabel: Grip | null = null;
   private labelUntil = 0;
   private size = 0;
+  private guide: SceneObject;
+  private guideMaterial: Material;
+  /** False while the ghost is away from the start: the object's own handles then hide. */
+  public boxVisible = true;
 
   constructor(
     private parent: SceneObject,
@@ -50,6 +54,14 @@ export class Handles {
   ) {
     label.size = SIZES.tag;
     label.getSceneObject().enabled = false;
+    // A thin line through the grabbed handle along its axis: the direction it moves in.
+    this.guide = global.scene.createSceneObject("Handle guide");
+    this.guide.setParent(parent);
+    const visual = this.guide.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
+    visual.mesh = mesh;
+    this.guideMaterial = template.clone();
+    visual.mainMaterial = this.guideMaterial;
+    this.guide.enabled = false;
   }
 
   private make(): Grip {
@@ -144,9 +156,33 @@ export class Handles {
     collider.shape = shape;
   }
 
+  private drawGuide(): void {
+    const grip = this.grips.find((g) => g.object.enabled && g.spec && (g.dragging || g.hovered));
+    this.guide.enabled = !!grip;
+    if (!grip || !grip.spec) return;
+    const spec = grip.spec;
+    const at = new vec3(spec.at.x * CM, spec.at.y * CM, spec.at.z * CM);
+    const reach = 45;
+    const a = this.toWorld(at.add(this.axisVector(spec, -reach)));
+    const b = this.toWorld(at.add(this.axisVector(spec, reach)));
+    const along = b.sub(a);
+    const t = this.guide.getTransform();
+    t.setWorldPosition(a.add(b).uniformScale(0.5));
+    const dir = along.normalize();
+    t.setWorldRotation(quat.lookAt(dir, Math.abs(dir.y) > 0.9 ? vec3.right() : vec3.up()));
+    t.setWorldScale(new vec3(this.size * 0.14, this.size * 0.14, along.length));
+    const c = grip.dragging ? HELD : HOVER;
+    this.guideMaterial.mainPass.baseColor = new vec4(c.x, c.y, c.z, 0.45);
+  }
+
+  private axisVector(spec: HandleSpec, length: number): vec3 {
+    return new vec3(spec.axis === "x" ? length : 0, spec.axis === "y" ? length : 0, spec.axis === "z" ? length : 0);
+  }
+
   /** Hide everything (while the wearer is not editing anything). */
   hide(): void {
     for (const grip of this.grips) grip.object.enabled = false;
+    this.guide.enabled = false;
     this.label.getSceneObject().enabled = false;
   }
 
@@ -171,7 +207,9 @@ export class Handles {
   late(): void {
     const now = getTime();
     for (const grip of this.grips) {
-      if (!grip.spec || !grip.object.enabled) continue;
+      if (!grip.spec) continue;
+      if (grip.spec.scope === "box") grip.object.enabled = this.boxVisible || grip.dragging;
+      if (!grip.object.enabled) continue;
       if (grip.dragging) {
         this.push(grip, false);
         // Keep the handle on its axis and on the edge it changes, whatever the hand does sideways.
@@ -185,6 +223,7 @@ export class Handles {
       const colour = grip.dragging ? HELD : grip.hovered ? HOVER : idle;
       grip.material.mainPass.baseColor = new vec4(colour.x, colour.y, colour.z, grip.spec.proposal ? 0.55 : 1);
     }
+    this.drawGuide();
     const grip = this.shownLabel;
     const live = grip && grip.spec && grip.object.enabled && (grip.dragging || grip.hovered || now < this.labelUntil);
     const object = this.label.getSceneObject();

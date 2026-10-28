@@ -8,7 +8,7 @@ import type { Frame, Plan } from "./Planner/index";
 
 const CM = 100;
 const RAD = Math.PI / 180;
-const HINT = "PINCH ARROW  •  DRAG RAIL";
+const HINT = "PINCH ARROW  •  PULL AN EDGE";
 
 @component
 export class PivotManeuver extends BaseScriptComponent {
@@ -274,6 +274,8 @@ export class PivotManeuver extends BaseScriptComponent {
         this.warning.text = label;
       }
 
+      // The object's handles belong to the object at rest at the start, not to the ghost on its way through.
+      this.analysis.setAtStart(this.progress < 0.02 && this.target < 0.02);
       const settled = Math.abs(this.target - this.progress) < 0.005 && !this.dragging;
       this.sofaDimensions.enabled = settled;
       this.doorDimensions.enabled = settled;

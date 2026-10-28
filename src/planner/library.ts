@@ -78,7 +78,7 @@ export function customScenario(object: ObjectPreset, gates: Gate[], box: Box = o
     boxName: `${object.name} ${Math.round(box.length * 100)} x ${Math.round(box.height * 100)} x ${Math.round(box.depth * 100)} cm`,
     box,
     gates,
-    story: "Pick any object and any place, then change the sizes to match yours. PIVOT re-plans the whole route every time.",
+    story: "Pull the glowing edges of the object and the gate to match your sizes, or pick another object or place. PIVOT re-plans the whole route every time.",
     lesson: "Measure the real gates, edit the numbers, and read the verdict and the suggested fixes before you lift.",
     expected: "clear",
   };
