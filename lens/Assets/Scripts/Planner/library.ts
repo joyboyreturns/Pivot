@@ -24,6 +24,11 @@ export const objectLibrary: ObjectPreset[] = [
   { id: "bed", name: "Double bed frame", box: { length: 2.05, height: 1.0, depth: 1.45 }, look: "box" },
   { id: "desk", name: "Office desk", box: { length: 1.6, height: 0.75, depth: 0.8 }, look: "box" },
   { id: "treadmill", name: "Treadmill", box: { length: 1.8, height: 1.4, depth: 0.85 }, look: "box" },
+  { id: "flight-case", name: "Touring flight case", box: { length: 1.2, height: 1.1, depth: 0.65 }, look: "box" },
+  { id: "art-crate", name: "Gallery art crate", box: { length: 1.65, height: 1.8, depth: 0.45 }, look: "box" },
+  { id: "aquarium", name: "Empty aquarium", box: { length: 1.2, height: 0.7, depth: 0.5 }, look: "box" },
+  { id: "workbench", name: "Workshop bench", box: { length: 1.6, height: 0.9, depth: 0.75 }, look: "box" },
+  { id: "cargo", name: "Delivery crate", box: { length: 1.2, height: 1, depth: 0.8 }, look: "box" },
 ];
 
 export interface PlacePreset {
@@ -66,6 +71,24 @@ export const placeLibrary: PlacePreset[] = [
         cabin: { width: 1.4, depth: 2.0, height: 2.4 },
         approach: { depth: 2.2, height: 2.5 },
       },
+    ],
+  },
+  {
+    id: "backstage", name: "Backstage", gates: [
+      { kind: "doorway", name: "Stage door", width: 0.72, height: 1.95, approach: { depth: 2.6, height: 2.5 } },
+      { kind: "corner", name: "Wings turn", inWidth: 1.2, outWidth: 1.1, height: 2.4 },
+    ],
+  },
+  {
+    id: "gallery", name: "Gallery loading", gates: [
+      { kind: "doorway", name: "Loading door", width: 1.2, height: 2.2, approach: { depth: 3, height: 2.8 } },
+      { kind: "corridor", name: "Gallery hall", width: 1.3, height: 2.4, length: 6, approach: { depth: 3, height: 2.8 } },
+    ],
+  },
+  {
+    id: "workshop", name: "Workshop", gates: [
+      { kind: "doorway", name: "Workshop door", width: 0.8, height: 2, approach: { depth: 2.4, height: 2.5 } },
+      { kind: "corner", name: "Bench corner", inWidth: 1.1, outWidth: 1.1, height: 2.4 },
     ],
   },
 ];

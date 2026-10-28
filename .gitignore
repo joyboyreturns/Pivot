@@ -4,5 +4,10 @@ coverage/
 .env
 .DS_Store
 # Lens Studio caches
-lens/Cache/
-lens/Workspaces/
+**/Cache/
+**/Workspaces/
+
+# Local editor state
+**/PluginsUserPreferences/
+lens/ls-live-instance.json
+lens/.virtual-scene.json

@@ -1,6 +1,6 @@
 import { Scenario } from "Leaf.lspkg/Scenarios/scenario/Scenario";
 import { findSceneObjectByName, sleep } from "Leaf.lspkg/Utils/common/Utils";
-import { check, goToScenario, has, tap, textOf } from "./PivotTestUtils";
+import { check, goToScenario, has, tap, textOf, SCENARIO_COUNT } from "./PivotTestUtils";
 
 /** Any object, any place: your-move mode swaps objects and places, edits every number and builds routes. */
 @component
@@ -21,7 +21,7 @@ export class PivotYourMoveScenario extends Scenario {
     check(has(textOf("Route Verdict Label"), "ROUTE CLEAR") || has(textOf("Route Verdict Label"), "ROUTE FITS"), "and the widened door lets the sofa through", textOf("Route Verdict Label"));
     await tap("Mode target");
     await sleep(900);
-    check(has(textOf("Scenario Title"), "1/7"), "back to the scenarios", textOf("Scenario Title"));
+    check(has(textOf("Scenario Title"), "1/" + SCENARIO_COUNT), "back to the scenarios", textOf("Scenario Title"));
 
     await tap("Mode target");
     await sleep(1700);
@@ -73,7 +73,7 @@ export class PivotYourMoveScenario extends Scenario {
 
     await tap("Mode target");
     await sleep(1700);
-    check(has(textOf("Scenario Title"), "1/7"), "back to the scenarios", textOf("Scenario Title"));
+    check(has(textOf("Scenario Title"), "1/" + SCENARIO_COUNT), "back to the scenarios", textOf("Scenario Title"));
     check(!findSceneObjectByName("Param plus 1").enabled, "steppers hidden again");
   }
 }

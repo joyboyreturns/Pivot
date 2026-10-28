@@ -9,7 +9,8 @@ const cm = (m: number) => `${(Math.abs(m) * 100).toFixed(0)} cm`;
  */
 export function planRoute(box: Box, gates: Gate[], options: RouteOptions = {}): RoutePlan {
   const { tightClearance = 0.03, ...planOptions } = options;
-  const plans: GatePlan[] = gates.map((gate) => ({ gate, plan: planGate(box, gate, planOptions) }));
+  if (!Number.isFinite(tightClearance) || tightClearance < 0) throw new RangeError("Tight clearance must be non-negative and finite");
+  const plans: GatePlan[] = gates.map((gate) => ({ gate, plan: planGate(box, gate, { ...planOptions, comfortableClearance: planOptions.comfortableClearance ?? tightClearance }) }));
 
   let bottleneckIndex = -1;
   let firstBlockedIndex = -1;

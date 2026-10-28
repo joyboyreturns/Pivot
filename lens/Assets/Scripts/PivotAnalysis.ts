@@ -1,4 +1,4 @@
-import { applyFix, boxHandles, frameAt, gateHandles, planRoute, scenarios, suggestFixes, maxScale } from "./Planner/index";
+import { applyFix, boxHandles, frameAt, gateHandles, planRoute, scenarios, suggestFixes, maxScale, rankRoutes } from "./Planner/index";
 import type { Fix, Gate, HandleSpec, Plan, RoutePlan, Scenario } from "./Planner/index";
 import { Handles } from "./PivotHandles";
 import { StageFx } from "./PivotStageFx";
@@ -88,6 +88,7 @@ export class PivotAnalysis extends BaseScriptComponent {
   private storyUntil = 0;
   private table: SceneObject | null = null;
   private switchLabel!: Text3D;
+  private scale = 1;
 
   public scenarioIndex = 0;
   public gateIndex = 0;
@@ -129,6 +130,7 @@ export class PivotAnalysis extends BaseScriptComponent {
   public setScenario(scenario: Scenario, gateIndex: number, scan: boolean): void {
     this.scenario = scenario;
     this.route = planRoute(scenario.box, scenario.gates);
+    this.scale = maxScale(scenario.box, scenario.gates);
     const start = this.route.firstBlockedIndex >= 0 ? this.route.firstBlockedIndex : this.route.bottleneckIndex;
     this.selectGate(gateIndex >= 0 ? gateIndex : Math.max(0, start), false);
     if (scan) {
@@ -150,6 +152,23 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.sandbox.enter();
       this.restartScan(0.9);
     }
+  }
+
+  /** Reuse the measured route on screen when replacing its object. */
+  private swapObject(): void {
+    this.sandbox.adopt(this.scenario.boxName, this.scenario.box, this.scenario.gates, this.gateIndex);
+    this.sandbox.nextObject();
+    this.restartScan(0.9);
+  }
+
+  private tryAlternative(): void {
+    const source = this.scenario;
+    const best = rankRoutes(source.box, source.alternatives || [])[0];
+    if (!best) return;
+    this.setScenario({ ...source, title: best.choice.name, gates: best.choice.gates,
+      story: `Same object, different route. ${best.choice.name} ${best.plan.fits ? `leaves ${cm(best.plan.clearance)} to spare` : `is ${cm(best.plan.clearance)} too tight`}.`,
+      alternatives: [{ id: source.id, name: source.title, gates: source.gates }],
+    }, -1, true);
   }
 
   public selectGate(index: number, restartScan = true): void {
@@ -176,14 +195,11 @@ export class PivotAnalysis extends BaseScriptComponent {
   }
 
   private resultText(gate: Gate, plan: Plan): string {
-    const verified = plan.verified ? "ALL STEPS CHECKED" : "SOME STEPS UNVERIFIED";
-    if (plan.fits) return `FITS · ${cm(plan.clearance)} TO SPARE\n${verified}`;
+    if (plan.fits) return `FITS · ${cm(plan.clearance)} TO SPARE`;
     if (plan.reason === "approach") {
-      const need = plan.approachNeeded;
-      const hall = gate.kind !== "corner" && gate.approach ? `HALL ${metres(gate.approach.depth)} · TURN NEEDS ${need ? metres(need.depth) : "MORE"}` : "";
-      return `NO ROOM TO TURN\n${hall}`;
+      return "NO ROOM TO TURN";
     }
-    return `DOES NOT FIT\nBEST POSE IS ${cm(plan.clearance)} TOO TIGHT`;
+    return `DOES NOT FIT · ${cm(plan.clearance)} SHORT`;
   }
 
   private detailTextFor(gate: Gate, plan: Plan): string {
@@ -209,7 +225,8 @@ export class PivotAnalysis extends BaseScriptComponent {
     const plan = this.currentPlan;
 
     this.titleText.text = this.sandbox.active ? `YOUR MOVE · ${s.boxName.replace(/ \d+ x \d+ x \d+ cm$/, "").toUpperCase()}` : `${this.scenarioIndex + 1}/${scenarios.length}  ${s.title.toUpperCase()}`;
-    this.storyText.text = wrap(s.story, 46);
+    const story = wrap(s.story, 44).split("\n");
+    this.storyText.text = story.slice(0, 2).join("\n") + (story.length > 2 ? "…" : "");
     const limiting = route.gates[route.bottleneckIndex];
     const verdictHead =
       route.verdict === "blocked"
@@ -218,8 +235,8 @@ export class PivotAnalysis extends BaseScriptComponent {
           ? `ROUTE FITS, ONLY JUST · ${limiting.gate.name.toUpperCase()} ${cm(route.clearance)}`
           : `ROUTE CLEAR · TIGHTEST ${limiting.gate.name.toUpperCase()} ${cm(route.clearance)}`;
     const verifiedLine = route.fits ? (route.verified ? "EVERY STEP CHECKED" : `${route.unverifiedSteps} STEPS UNVERIFIED`) : "";
-    const scale = maxScale(s.box, s.gates);
-    const scaleLine = scale >= 1 ? `THIS ROUTE ALLOWS UP TO ${Math.min(180, Math.round(scale * 100))}% OF THIS SIZE` : scale > 0 ? `SHRINK TO ${Math.round(scale * 100)}% OF THIS SIZE TO FIT` : "NO SIZE FITS THIS ROUTE";
+    const scale = this.scale;
+    const scaleLine = scale >= 1 ? `UP TO ${Math.min(180, Math.floor(scale * 100 + 1e-6))}% OF THIS SIZE CHECKED` : scale > 0 ? `SHRINK TO ${Math.floor(scale * 100 + 1e-6)}% OF THIS SIZE TO FIT` : "NO SIZE FITS THIS ROUTE";
     this.verdictText.text = [verdictHead, verifiedLine, scaleLine].filter((l) => l).join("\n");
 
     this.view.show(gate, plan, this.gateTone(plan));
@@ -382,6 +399,9 @@ export class PivotAnalysis extends BaseScriptComponent {
           gateIndex: () => this.gateIndex,
           gateCount: () => this.route.gates.length,
           setSwitchLabel: (t) => { this.switchLabel.text = t; },
+          swapObject: () => this.swapObject(),
+          tryAlternative: () => this.tryAlternative(),
+          hasAlternative: () => !!this.scenario.alternatives?.length,
         },
         (n) => this.find(n),
         (n) => this.text(n)
@@ -461,6 +481,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     });
 
     this.createEvent("UpdateEvent").bind(() => {
+      if (!this.storyText || !this.currentPlan) return;
       this.storyText.getSceneObject().enabled = getTime() < this.storyUntil;
       for (const tag of this.fixTags) {
         if (tag.hideAt > 0 && getTime() > tag.hideAt) {

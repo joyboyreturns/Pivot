@@ -48,6 +48,10 @@ export class StageFx {
 
   /** The whole move at once: faint copies of the bounding box along the plan, the tightest moment tinted. */
   showTrail(scenario: Scenario, plan: Plan, tone: Tone): void {
+    if (!plan.fits) {
+      this.hideTrail();
+      return;
+    }
     const limit = Math.min(1, maxProgress(plan));
     const tight = plan.steps.length > 1 && plan.bottleneckIndex >= 0 ? plan.bottleneckIndex / (plan.steps.length - 1) : -1;
     let nearest = -1;
@@ -70,7 +74,7 @@ export class StageFx {
       tr.setLocalRotation(t.rotation);
       tr.setLocalScale(new vec3(b.length * CM, b.height * CM, b.depth * CM));
       const c = i === nearest ? TONES[tone] : TONES.info;
-      p.material.mainPass.baseColor = new vec4(c.x, c.y, c.z, i === nearest ? 0.2 : 0.07);
+      p.material.mainPass.baseColor = new vec4(c.x, c.y, c.z, i === nearest ? 0.1 : 0.025);
     }
   }
 

@@ -1,4 +1,4 @@
-import { withBoxParam, withGateParam } from "./builder";
+import { applyFix, withBoxParam, withGateParam } from "./builder";
 import { planGate } from "./planner";
 import type { Box, Fix, FixChange, Gate, PlanOptions } from "./types";
 
@@ -57,12 +57,12 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
   const openingFix = (id: string, noun: string, limitGrow: number) => {
     const from = readParam(gate, id)!;
     const alone = gateFix(gate, id, limitGrow, { ...options, approach: null });
-    if (alone) push("widen", `${gate.name} ${noun}`, from, alone.to, `Widen the ${gate.name} ${noun} to ${cm(alone.to)} (+${cm(alone.to - from)})`, `Widen to ${cm(alone.to)}`, [gateChange(id, alone.to)]);
+    if (alone && fits(box, alone.gate, options)) push("widen", `${gate.name} ${noun}`, from, alone.to, `Widen the ${gate.name} ${noun} to ${cm(alone.to)} (+${cm(alone.to - from)})`, `Widen to ${cm(alone.to)}`, [gateChange(id, alone.to)]);
     const after = alone ? alone.gate : gate;
     if (!fits(box, after, options) && planGate(box, after, options).reason === "approach") {
       const depth = gateFix(after, "hallDepth", 3, options);
       const was = readParam(after, "hallDepth") ?? 0;
-      if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `Give it ${cm(depth.to)} of room in front of the ${gate.name} (now ${cm(was)})`, `Hall to ${cm(depth.to)}`, [...(alone ? [gateChange(id, alone.to)] : []), gateChange("hallDepth", depth.to)]);
+      if (depth) push("deepen", `${gate.name} hall`, was, depth.to, `${alone ? `Widen the ${gate.name} ${noun} to ${cm(alone.to)} and give it ` : "Give it "}${cm(depth.to)} of room in front (now ${cm(was)})`, `${alone ? `Door ${cm(alone.to)} + ` : ""}hall ${cm(depth.to)}`, [...(alone ? [gateChange(id, alone.to)] : []), gateChange("hallDepth", depth.to)]);
     }
   };
 
@@ -116,7 +116,10 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
       changes: [{ scope: "box", id, value: to }],
     });
   }
-  return out.sort((a, b) => a.delta - b.delta);
+  return out.filter((fix) => {
+    const after = applyFix(box, gate, fix);
+    return planGate(after.box, after.gate, options).fits;
+  }).sort((a, b) => a.delta - b.delta);
 }
 
 function readParam(gate: Gate, id: string): number | null {
@@ -136,6 +139,7 @@ function readParam(gate: Gate, id: string): number | null {
  * 0.9 means it has to shrink to 90 percent. 0 when even a tiny version does not fit.
  */
 export function maxScale(box: Box, gates: Gate[], options: PlanOptions = {}): number {
+  if (gates.length === 0) return 0;
   const scaled = (s: number): Box => ({ length: box.length * s, height: box.height * s, depth: box.depth * s });
   const ok = (s: number, opts?: PlanOptions) => gates.every((g) => fits(scaled(s), g, { ...options, ...opts }));
   if (!ok(0.2, QUICK)) return 0;

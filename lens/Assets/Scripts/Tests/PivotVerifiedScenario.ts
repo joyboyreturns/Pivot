@@ -16,14 +16,13 @@ export class PivotVerifiedScenario extends Scenario {
     await tap("Gate chip 2");
     await sleep(1700);
     check(has(textOf("Doorway Dimensions"), "LIFT DOOR") === true, "Doorway Dimensions contains LIFT DOOR = true", textOf("Doorway Dimensions"));
-    check(has(textOf("PIVOT No-fit Label"), "ALL STEPS CHECKED") === true, "PIVOT No-fit Label contains ALL STEPS CHECKED = true", textOf("PIVOT No-fit Label"));
+    check(has(textOf("Unverified Maneuver Label"), "EVERY STEP CHECKED") === true, "Unverified Maneuver Label contains EVERY STEP CHECKED = true", textOf("Unverified Maneuver Label"));
     await step(3);
     check(has(textOf("Unverified Maneuver Label"), "VERIFIED STEP") === true, "Unverified Maneuver Label contains VERIFIED STEP = true", textOf("Unverified Maneuver Label"));
     check(has(textOf("Unverified Maneuver Label"), "UNVERIFIED") === false, "Unverified Maneuver Label contains UNVERIFIED = false", textOf("Unverified Maneuver Label"));
 
     await tap("Gate chip 3");
     await sleep(1700);
-    check(has(textOf("PIVOT No-fit Label"), "SOME STEPS UNVERIFIED") === true, "PIVOT No-fit Label contains SOME STEPS UNVERIFIED = true", textOf("PIVOT No-fit Label"));
     check(has(textOf("Unverified Maneuver Label"), "UNVERIFIED MANEUVER") === true, "Unverified Maneuver Label contains UNVERIFIED MANEUVER = true", textOf("Unverified Maneuver Label"));
     await step(1);
     check(has(textOf("Unverified Maneuver Label"), "UNVERIFIED MANEUVER") === true, "Unverified Maneuver Label contains UNVERIFIED MANEUVER = true", textOf("Unverified Maneuver Label"));

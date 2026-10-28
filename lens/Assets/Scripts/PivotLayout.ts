@@ -13,12 +13,12 @@ export const TABLE_Z = -110;
 export const TABLE_TOP = -20;
 
 export const SIZES = {
-  title: 46,
-  hero: 78,
-  line: 40,
-  small: 34,
-  button: 42,
-  tag: 36,
+  title: 44,
+  hero: 60,
+  line: 32,
+  small: 32,
+  button: 38,
+  tag: 32,
 };
 
 /** Rough width (cm) of a line of Text3D at a size, for left-aligning a label beside its marker. */
@@ -30,13 +30,20 @@ export const textWidth = (text: string, size: number): number => {
 
 export const RAIL_HALF = 16;
 
+/**
+ * The row of controls just beyond the table's front edge (the table is 46 cm deep, centred 4 cm in front of
+ * TABLE_Z). A hall 2.4 to 3 m deep ends at the table edge, so its limit bar and handle would sit on the tokens
+ * if the row were on the table.
+ */
+export const FRONT_Z = TABLE_Z + 27;
+
 /** Gate tokens along the front edge of the table. */
-export const tokenAt = (i: number): vec3 => W(-22 + i * 15, TABLE_TOP - 2, TABLE_Z + 22);
-export const tokenLabelAt = (i: number): vec3 => W(-22 + i * 15 + 7, TABLE_TOP - 2, TABLE_Z + 22);
+export const tokenAt = (i: number): vec3 => W(-22 + i * 15, TABLE_TOP - 2, FRONT_Z);
+export const tokenLabelAt = (i: number): vec3 => W(-22 + i * 15 + 7, TABLE_TOP - 2, FRONT_Z);
 
 /** The scrub rail under the tokens and the next-step arrow at its right end. */
-export const RAIL_AT = (): vec3 => W(0, TABLE_TOP - 5.5, TABLE_Z + 22);
-export const ARROW_AT = (): vec3 => W(19, TABLE_TOP - 5.5, TABLE_Z + 22);
+export const RAIL_AT = (): vec3 => W(0, TABLE_TOP - 5.5, FRONT_Z);
+export const ARROW_AT = (): vec3 => W(19, TABLE_TOP - 5.5, FRONT_Z);
 
 /** Left column: modes and sandbox buttons. Right column: steppers. */
 export const leftColumn = (row: number): number => 14 - row * 6;

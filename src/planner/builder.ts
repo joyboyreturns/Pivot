@@ -11,6 +11,7 @@ export function boxParams(box: Box): Param[] {
 }
 
 export function withBoxParam(box: Box, id: string, value: number): Box {
+  if (!Number.isFinite(value)) return box;
   const v = round(clamp(value, 0.1, 3.5));
   if (id === "length") return { ...box, length: v };
   if (id === "height") return { ...box, height: v };
@@ -71,6 +72,7 @@ function withApproach<T extends { approach?: { depth: number; height: number } }
 
 /** A copy of the gate with one parameter changed (clamped, rounded to a centimetre). */
 export function withGateParam(gate: Gate, id: string, value: number): Gate {
+  if (!Number.isFinite(value)) return gate;
   const spec = gateParams(gate).find((p) => p.id === id);
   if (!spec) return gate;
   const v = round(clamp(value, spec.min, spec.max));

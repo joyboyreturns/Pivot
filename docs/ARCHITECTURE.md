@@ -47,7 +47,7 @@ Pitch, yaw and roll in 15 degree steps over [0, 180) (a box is symmetric under 1
 
 ### Approach clearance and verification
 
-Each gate may carry an `approach`: the free depth in front of it (how far back the object can swing) and the ceiling height. The tilts and turns that take the object from upright to the pass pose are sampled every 10 degrees along the interpolated rotation; the smallest `min(depth - extent z, height - extent y)` is that step's clearance. The search ranks poses by the smaller of gate clearance and approach clearance, so with little room it chooses a different way through.
+Each gate may carry an `approach`: the free depth in front of it (how far back the object can swing) and the ceiling height. The tilts and turns that take the object from upright to the pass pose are checked at the exact sinusoidal extrema for each single-axis rotation; the smallest `min(depth - extent z, height - extent y)` is that step's clearance. The search ranks poses by the smaller of gate clearance and approach clearance, so with little room it chooses a different way through.
 
 Every `PlanStep` has `verified`:
 
@@ -75,12 +75,12 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 
 - `builder.ts`: every box and gate exposes its editable numbers as `Param` rows (`boxParams`, `gateParams`) and returns edited copies (`withBoxParam`, `withGateParam`), clamped and rounded to a centimetre. A hall depth of 0 means "not measured": the approach is dropped and the turn becomes unverified. `defaultGate` and `nextGate` build routes.
 - `handles.ts`: where each grab point sits (`boxHandles`, `gateHandles`) and what a drag changes (`applyHandle`), as pure functions the Lens only draws.
-- `library.ts`: 12 objects (`objectLibrary`), 6 places (`placeLibrary`) and `customScenario` for the Lens's *Your move* mode.
+- `library.ts`: 17 objects (`objectLibrary`), 9 places (`placeLibrary`) and `customScenario` for the Lens's *Your move* mode.
 - `fixes.ts`: `suggestFixes(box, gate)` finds the smallest change that makes a blocked gate pass: widen the opening (judged without the approach space first, then, if the turn is still blocked, the hall depth needed), a deeper cabin, wider halls, or a smaller object (height, depth or length, capped at 25 cm). Each search is a bisection with the quick planner (30 degree steps) confirmed by the full planner. `maxScale(box, gates)` is the largest uniform scale the whole route allows.
 
 ### Scenario library and choreography
 
-`scenarios` holds seven scenarios (story, lesson, expected verdict); a test holds the planner to every advertised verdict. `frameAt(plan, u)` returns the object's position and pose at progress `u`, interpolating between steps and following the exact swing for L-turns; `attemptFrame` is the failed-attempt wiggle for a doorway where nothing fits.
+`scenarios` holds twelve scenarios (story, lesson, expected verdict); a test holds the planner to every advertised verdict. `frameAt(plan, u)` returns the object's position and pose at progress `u`, interpolating between steps and following the exact swing for L-turns; `attemptFrame` is the failed-attempt wiggle for a doorway where nothing fits.
 
 ## Design rules the Lens follows
 
@@ -104,9 +104,17 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (86 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- Vitest (107 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
 - LEAF (12 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, dragging handles (door, hall, object, L-turn), the move table (controls and labels inside the field of view, model scale, callouts, trail, life size).
 
 ## Not modelled (cut first)
 
 Room scanning, object recognition, stairs, wall thickness while tilting through, deformable furniture, rotation inside a lift cabin, an L-turn with a tilted object turning about a non-vertical axis, doors that open.
+
+## October 28 reliability and showcase update
+
+`choices.ts` ranks measured route alternatives deterministically: fitting routes first, checked maneuvers before unmeasured ones, then clearance and gate count. Gallery, workshop and cargo scenarios expose an alternative through the existing spatial controls. Object swapping preserves the route.
+
+Single-axis approach sweeps now check exact vertex extrema, including peaks between samples. Corner fit includes the initial lay-down sweep. Playback starts and finishes beyond the object's half-depth instead of using fixed distances. Every suggested fix is reapplied and checked with the full planner; incomplete widening suggestions are removed. Invalid dimensions and non-finite search settings are rejected. Route pose selection uses the route's tight-clearance threshold unless explicitly overridden.
+
+`PivotObjectModel` builds pooled solid parts for all non-sofa presets, sharing a small material palette. Models stay within the measured box and switch to a translucent bounding volume during playback. Blocked plans hide the ghost trail; successful plans use a lighter trail. The moving annotation stays below the route summary in model view.

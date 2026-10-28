@@ -1,7 +1,8 @@
 import { TapInteraction } from "./TapInteraction";
 import { DragInteraction } from "./DragInteraction";
 import { PivotAnalysis } from "./PivotAnalysis";
-import { extents, frameAt, maxProgress } from "./Planner/index";
+import { ObjectModel } from "./PivotObjectModel";
+import { extents, frameAt, gateHandles, maxProgress } from "./Planner/index";
 import { poseTransform } from "./PivotPose";
 import { ARROW_AT, RAIL_AT, RAIL_HALF } from "./PivotLayout";
 import type { Frame, Plan } from "./Planner/index";
@@ -9,6 +10,9 @@ import type { Frame, Plan } from "./Planner/index";
 const CM = 100;
 const RAD = Math.PI / 180;
 const HINT = "PINCH ARROW  •  PULL AN EDGE";
+/** Step label against a gate handle, in room cm: half the label's width plus the handle's, and half their heights plus a margin. */
+const LABEL_REACH = 55;
+const LABEL_CLEAR = 32;
 
 @component
 export class PivotManeuver extends BaseScriptComponent {
@@ -43,7 +47,8 @@ export class PivotManeuver extends BaseScriptComponent {
   private railZ = 0;
   private revision = -1;
   private lastLabel = "";
-  private props: SceneObject[] = [];
+  private objectModel!: ObjectModel;
+  private playbackMaterial!: Material;
   private bodyMaterial!: Material;
   private baseScale = new vec3(1, 1, 1);
   private baseOffset = vec3.zero();
@@ -85,78 +90,27 @@ export class PivotManeuver extends BaseScriptComponent {
     this.boxVisual.enabled = !isSofa;
     this.activeVisual = isSofa ? this.sofaVisual : this.boxVisual;
     this.boxVisual.getSceneObject().getTransform().setLocalScale(new vec3(s.box.length * CM, s.box.height * CM, s.box.depth * CM));
-    const n = s.boxName.toLowerCase();
-    this.bodyMaterial = this.solidMaterial.clone();
-    this.bodyMaterial.mainPass.baseColor = this.bodyColor(n);
+    this.bodyMaterial.mainPass.baseColor = new vec4(0.6, 0.85, 0.9, 1);
+    this.playbackMaterial.mainPass.baseColor = this.analysis.currentPlan.fits ? new vec4(0.3, 0.95, 0.93, 0.32) : new vec4(1, 0.55, 0.4, 0.32);
     this.activeVisual.mainMaterial = isSofa ? this.originalMaterial : this.bodyMaterial;
     this.showingGhost = false;
     this.touched = false;
     this.autoClock = 0;
-    this.buildProps(s.boxName);
+    this.objectModel.show(s.boxName);
+    this.objectModel.setVisible(!isSofa);
+    this.boxVisual.enabled = false;
     (this.sofaDimensions.getComponent("Component.Text3D") as Text3D).text = s.boxName.toUpperCase();
   }
 
-  private addProp(x: number, y: number, z: number, w: number, h: number, d: number, color: vec4): void {
-    const object = global.scene.createSceneObject("Box detail");
-    object.setParent(this.boxVisual.getSceneObject());
-    const visual = object.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
-    visual.mesh = this.boxMesh;
-    const material = this.propMaterial.clone();
-    material.mainPass.baseColor = color;
-    visual.mainMaterial = material;
-    object.getTransform().setLocalPosition(new vec3(x, y, z));
-    object.getTransform().setLocalScale(new vec3(w, h, d));
-    this.props.push(object);
-  }
-
-  /** Light details so a box reads as a wardrobe or a mattress; they sit in unit-cube space of the scaled box. */
-  private buildProps(name: string): void {
-    for (const p of this.props) p.destroy();
-    this.props = [];
-    const n = name.toLowerCase();
-    const cream = new vec4(1, 0.92, 0.75, 1);
-    if (n.indexOf("wardrobe") >= 0) {
-      this.addProp(0, 0, 0.5, 0.012, 0.94, 0.03, cream);
-      this.addProp(-0.07, 0.02, 0.5, 0.018, 0.14, 0.05, cream);
-      this.addProp(0.07, 0.02, 0.5, 0.018, 0.14, 0.05, cream);
-      this.addProp(0, 0.5, 0, 1.02, 0.02, 1.02, cream);
-    } else if (n.indexOf("mattress") >= 0) {
-      this.addProp(0, 0.5, 0, 0.92, 0.12, 0.94, new vec4(0.75, 0.88, 1, 1));
-      this.addProp(-0.25, 0.57, 0, 0.012, 0.02, 0.94, cream);
-      this.addProp(0.25, 0.57, 0, 0.012, 0.02, 0.94, cream);
-      this.addProp(0, 0.57, -0.25, 0.92, 0.02, 0.012, cream);
-      this.addProp(0, 0.57, 0.25, 0.92, 0.02, 0.012, cream);
-    } else if (n.indexOf("fridge") >= 0) {
-      this.addProp(0, 0.2, 0.5, 0.98, 0.012, 0.03, cream);
-      this.addProp(0.38, 0.38, 0.5, 0.025, 0.28, 0.06, cream);
-      this.addProp(0.38, -0.02, 0.5, 0.025, 0.36, 0.06, cream);
-    } else if (n.indexOf("piano") >= 0) {
-      this.addProp(0, 0.05, 0.5, 0.9, 0.09, 0.04, cream);
-      this.addProp(0, 0.5, 0, 1.02, 0.03, 1.02, cream);
-    } else if (n.indexOf("washing") >= 0) {
-      this.addProp(0, -0.05, 0.5, 0.62, 0.62, 0.03, new vec4(0.6, 0.85, 1, 1));
-      this.addProp(0, 0.4, 0.5, 0.7, 0.08, 0.03, cream);
-    } else if (n.indexOf("bookcase") >= 0) {
-      for (let i = 0; i < 5; i++) this.addProp(0, -0.4 + i * 0.2, 0.5, 0.94, 0.015, 0.03, cream);
-    } else if (n.indexOf("desk") >= 0 || n.indexOf("table") >= 0) {
-      this.addProp(0, 0.5, 0, 1.02, 0.1, 1.04, cream);
-    } else if (n.indexOf("bed") >= 0) {
-      this.addProp(0, 0.5, 0, 0.96, 0.12, 0.96, new vec4(0.8, 0.88, 1, 1));
-      this.addProp(-0.46, 0.2, 0, 0.06, 1.0, 1.02, cream);
-    }
-  }
-
-  private bodyColor(n: string): vec4 {
-    if (n.indexOf("wardrobe") >= 0 || n.indexOf("bookcase") >= 0 || n.indexOf("desk") >= 0 || n.indexOf("table") >= 0) return new vec4(0.85, 0.6, 0.35, 1);
-    if (n.indexOf("mattress") >= 0 || n.indexOf("fridge") >= 0 || n.indexOf("washing") >= 0) return new vec4(0.9, 0.92, 1, 1);
-    if (n.indexOf("piano") >= 0) return new vec4(0.45, 0.35, 0.3, 1);
-    if (n.indexOf("armchair") >= 0) return new vec4(0.9, 0.55, 0.45, 1);
-    if (n.indexOf("treadmill") >= 0) return new vec4(0.55, 0.6, 0.7, 1);
-    return new vec4(0.6, 0.85, 0.9, 1);
-  }
-
-  private setProps(visible: boolean): void {
-    for (const p of this.props) p.enabled = visible;
+  /**
+   * The step label is about 70 cm wide in the room and the gate's grab points sit on its jambs and lintel, so a
+   * label centred at a handle's height would cover the handle. Lift it just above any handle it would touch (room cm).
+   */
+  private clearOfHandles(x: number, y: number): number {
+    if (this.analysis.isLifeSize) return y;
+    const handles = gateHandles(this.analysis.currentGate).map((h) => ({ x: h.at.x * CM, y: h.at.y * CM })).sort((a, b) => a.y - b.y);
+    for (const h of handles) if (Math.abs(h.x - x) < LABEL_REACH && Math.abs(y - h.y) < LABEL_CLEAR) y = h.y + LABEL_CLEAR;
+    return y;
   }
 
   private warningText(plan: Plan, step: number): string {
@@ -196,7 +150,10 @@ export class PivotManeuver extends BaseScriptComponent {
       boxObject.setParent(this.sofa);
       this.boxVisual = boxObject.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
       this.boxVisual.mesh = this.boxMesh;
-      this.boxVisual.mainMaterial = this.solidMaterial;
+      this.bodyMaterial = this.solidMaterial.clone();
+      this.playbackMaterial = this.ghostMaterial.clone();
+      this.boxVisual.mainMaterial = this.bodyMaterial;
+      this.objectModel = new ObjectModel(boxObject, this.boxMesh, this.propMaterial, this.ghostMaterial);
       this.activeVisual = this.sofaVisual;
 
       const arrowMesh = this.arrowVisual.getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
@@ -253,16 +210,19 @@ export class PivotManeuver extends BaseScriptComponent {
       const showGhost = this.progress > 0.01 || this.target > 0;
       if (showGhost !== this.showingGhost) {
         const isSofa = this.activeVisual === this.sofaVisual;
-        this.activeVisual.mainMaterial = showGhost ? this.ghostMaterial : isSofa ? this.originalMaterial : this.bodyMaterial;
+        this.activeVisual.mainMaterial = showGhost ? this.playbackMaterial : isSofa ? this.originalMaterial : this.bodyMaterial;
+        this.boxVisual.enabled = showGhost && !isSofa;
         this.showingGhost = showGhost;
-        this.setProps(!showGhost && !isSofa);
+        this.objectModel.setVisible(!showGhost && !isSofa);
       }
       this.place(frameAt(plan, this.progress));
       // The step label rides on the ghost it describes.
       const ghost = this.sofa.getTransform().getLocalPosition();
       const top = extents(this.analysis.scenario.box, frameAt(plan, this.progress).pose).y * 50 + 26;
       const tag = this.warning.getSceneObject().getTransform();
-      tag.setWorldPosition(this.analysis.stageToWorld(new vec3(ghost.x, ghost.y + top, ghost.z)));
+      const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), ghost.z));
+      if (!this.analysis.isLifeSize) tagPosition.y = Math.min(-5, tagPosition.y);
+      tag.setWorldPosition(tagPosition);
       const k = this.analysis.isLifeSize ? 3 : 1;
       tag.setLocalScale(new vec3(k, k, k));
 

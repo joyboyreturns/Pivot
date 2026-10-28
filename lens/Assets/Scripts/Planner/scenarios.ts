@@ -1,5 +1,7 @@
 import { furniture } from "./fixtures";
 import type { Box, Gate, Verdict } from "./types";
+import type { RouteChoice } from "./choices";
+import { objectLibrary, placeLibrary } from "./library";
 
 export interface Scenario {
   id: string;
@@ -14,6 +16,8 @@ export interface Scenario {
   lesson: string;
   /** What the planner is expected to say; the tests hold the library to this. */
   expected: Verdict;
+  /** Optional measured alternatives, compared using the same object and planner. */
+  alternatives?: RouteChoice[];
 }
 
 const studioSofa: Box = { length: 2.1, height: 0.85, depth: 0.9 };
@@ -125,6 +129,62 @@ export const scenarios: Scenario[] = [
     story: "The only way to the back room is a 6 m service corridor with a 1.95 m ceiling beam. The wardrobe is 2.00 m tall.",
     lesson: "Standing up it cannot pass. Laying it down and turning it does, and the room to tip it over is part of the check.",
     expected: "clear",
+  },
+  {
+    id: "backstage-flight-case",
+    title: "The show must go on",
+    boxName: "Touring flight case 120 x 110 x 65 cm",
+    box: objectLibrary.find((o) => o.id === "flight-case")!.box,
+    gates: placeLibrary.find((p) => p.id === "backstage")!.gates,
+    story: "A touring crew has one flight case, a 72 cm stage door, and a turn into the wings. Check the whole load-in before the show.",
+    lesson: "Rotate the case at the door, then follow its footprint around the corner. The same solver works for equipment as well as furniture.",
+    expected: "clear",
+  },
+  {
+    id: "gallery-loading",
+    title: "Art takes another route",
+    boxName: "Gallery art crate 165 x 180 x 45 cm",
+    box: objectLibrary.find((o) => o.id === "art-crate")!.box,
+    gates: [{ kind: "doorway", name: "Side entrance", width: 0.42, height: 2.1, approach: { depth: 3, height: 2.8 } }],
+    alternatives: [{ id: "gallery-loading", name: "Gallery loading", gates: placeLibrary.find((p) => p.id === "gallery")!.gates }],
+    story: "A framed work arrives in a rigid transport crate. The side entrance is too narrow. Pinch Try another route to compare the measured loading entrance.",
+    lesson: "A blocked entrance does not mean cancelling the delivery. Compare a different route with the exact same object and measurements.",
+    expected: "blocked",
+  },
+  {
+    id: "workshop-bench",
+    title: "A millimetre matters",
+    boxName: "Workshop bench 160 x 90 x 75 cm",
+    box: objectLibrary.find((o) => o.id === "workbench")!.box,
+    gates: placeLibrary.find((p) => p.id === "workshop")!.gates,
+    alternatives: [{ id: "workshop-double", name: "Double doors", gates: [{ kind: "doorway", name: "Double doors", width: 1.3, height: 2.1, approach: { depth: 3, height: 2.8 } }] }],
+    story: "The bench clears the workshop door, but the 1.10 m hall turn leaves almost no spare room. Try the double doors before taking a risk.",
+    lesson: "Clearance is a measured gap, not a promise of handling room. A route with more margin is a better choice than a just-touching turn.",
+    expected: "tight",
+  },
+  {
+    id: "aquarium-delivery",
+    title: "Glass through the garden",
+    boxName: "Empty aquarium 120 x 70 x 50 cm",
+    box: objectLibrary.find((o) => o.id === "aquarium")!.box,
+    gates: [
+      { kind: "doorway", name: "Garden gate", width: 0.78, height: 1.9, approach: { depth: 2.4, height: 2.5 } },
+      { kind: "corridor", name: "Side passage", width: 0.82, height: 2.1, length: 5, approach: { depth: 2.4, height: 2.5 } },
+    ],
+    story: "An empty aquarium is delivered through the garden and a narrow side passage. Plan the geometric route before carrying the fragile load.",
+    lesson: "Replace the object, keep the route model. The result checks its rigid bounding box; weight, contents and handling requirements still need human judgement.",
+    expected: "clear",
+  },
+  {
+    id: "cargo-lift",
+    title: "The lift door is not enough",
+    boxName: "Delivery crate 120 x 100 x 80 cm",
+    box: objectLibrary.find((o) => o.id === "cargo")!.box,
+    gates: [{ kind: "elevator", name: "Passenger lift", door: { width: 0.9, height: 2.05 }, cabin: { width: 0.9, depth: 0.9, height: 1.1 }, approach: { depth: 2.5, height: 2.6 } }],
+    alternatives: [{ id: "goods-lift", name: "Goods lift", gates: [{ kind: "elevator", name: "Goods lift", door: { width: 1.2, height: 2.2 }, cabin: { width: 1.6, depth: 2, height: 2.4 }, approach: { depth: 3, height: 2.8 } }] }],
+    story: "The delivery crate looks small enough for the lift door. The cabin behind it is a different constraint. Compare the goods lift before loading.",
+    lesson: "A doorway check alone misses the space behind the opening. The same pose must fit both the door and the entire cabin.",
+    expected: "blocked",
   },
 ];
 

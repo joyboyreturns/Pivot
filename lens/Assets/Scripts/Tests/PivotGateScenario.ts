@@ -1,7 +1,7 @@
 import { Scenario } from "Leaf.lspkg/Scenarios/scenario/Scenario";
 import { expect } from "Leaf.lspkg/Utils/common/Expect";
 import { findSceneObjectByName, sleep } from "Leaf.lspkg/Utils/common/Utils";
-import { goToScenario, has, tap, textOf } from "./PivotTestUtils";
+import { check, goToScenario, has, tap, textOf } from "./PivotTestUtils";
 
 /** Gate chips: pinching a chip shows that gate at its own size, with its own result and the bottleneck marked. */
 @component
@@ -21,8 +21,8 @@ export class PivotGateScenario extends Scenario {
 
     await goToScenario(3);
     expect(has(textOf("PIVOT No-fit Label"), "NO ROOM TO TURN")).toBe(true);
-    expect(has(textOf("Gate Detail Label"), "TURNING SWEEPS") || has(textOf("PIVOT No-fit Label"), "HALL 1.20 M")).toBe(true);
-    expect(has(textOf("PIVOT No-fit Label"), "TURN NEEDS 2.28 M")).toBe(true);
+    check(has(textOf("Gate Detail Label"), "TURNING SWEEPS"), "detail says the turn sweeps space", textOf("Gate Detail Label"));
+    check(has(textOf("Gate Detail Label"), "2.28 M DEEP"), "detail gives the depth the turn needs", textOf("Gate Detail Label"));
     await tap("Gate chip 1");
     await sleep(1700);
     expect(has(textOf("PIVOT No-fit Label"), "FITS")).toBe(true);

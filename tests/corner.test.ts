@@ -68,12 +68,12 @@ describe("planGate on an L-turn", () => {
     expect(plan.clearance).toBeCloseTo(0, 6);
   });
 
-  it("lays a tall box on its back when the ceiling is lower than it is", () => {
+  it("rejects laying a tall box down when the initial tilt hits the ceiling", () => {
     const wardrobe = { length: 1.0, height: 2.0, depth: 0.6 };
     const plan = planGate(wardrobe, corner(1.5, 1.5, 1.5));
-    expect(plan.fits).toBe(true);
-    expect(plan.turn?.tipped).toBe(true);
-    expect(plan.steps.some((s) => s.kind === "tilt")).toBe(true);
+    expect(plan.fits).toBe(false);
+    expect(plan.verified).toBe(false);
+    expect(plan.clearance).toBeLessThan(0);
   });
 
   it("the smallest equal hall for a square-profile sofa agrees with the closed form", () => {

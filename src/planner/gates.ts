@@ -1,4 +1,4 @@
-import { extents } from "./geometry";
+import { extents, rotationMatrix } from "./geometry";
 import type { Approach, Box, Gate, Pose } from "./types";
 
 /** Gates that are passed in one fixed pose, so a pose either clears them or it does not. */
@@ -43,6 +43,9 @@ export interface Sweep {
  * and take the tightest clearance against the approach space.
  */
 export function sweepSegment(box: Box, approach: Approach | null, from: Pose, to: Pose, maxStep = 10): Sweep {
+  if (!Number.isFinite(maxStep) || maxStep <= 0) throw new RangeError("Sweep step must be positive and finite");
+  const axes = (["pitch", "yaw", "roll"] as const).filter((axis) => from[axis] !== to[axis]);
+  if (axes.length === 1) return singleAxisSweep(box, approach, from, to, axes[0]!);
   const delta = Math.max(Math.abs(to.pitch - from.pitch), Math.abs(to.yaw - from.yaw), Math.abs(to.roll - from.roll));
   const n = Math.max(1, Math.ceil(delta / maxStep));
   let clearance = Infinity;
@@ -55,6 +58,33 @@ export function sweepSegment(box: Box, approach: Approach | null, from: Pose, to
     if (approach) clearance = Math.min(clearance, approach.depth - e.z, approach.height - e.y);
   }
   return { clearance, depth, height };
+}
+
+/** Each signed vertex coordinate is a sinusoid during a one-axis turn. Check its
+ * exact maximum, including peaks between the old ten-degree samples. */
+function singleAxisSweep(box: Box, approach: Approach | null, from: Pose, to: Pose, axis: keyof Pose): Sweep {
+  const matrices = [0, 90, 180].map((angle) => rotationMatrix({ ...from, [axis]: angle }));
+  const lo = Math.min(from[axis], to[axis]) * Math.PI / 180;
+  const hi = Math.max(from[axis], to[axis]) * Math.PI / 180;
+  const maximum = (row: number): number => {
+    let result = 0;
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+      const v = [box.length * sx, box.height * sy, box.depth * sz];
+      const values = matrices.map((m) => m[row]! * v[0]! + m[row + 1]! * v[1]! + m[row + 2]! * v[2]!);
+      const c = (values[0]! + values[2]!) / 2;
+      const a = values[0]! - c;
+      const b = values[1]! - c;
+      const at = (angle: number) => c + a * Math.cos(angle) + b * Math.sin(angle);
+      result = Math.max(result, at(lo), at(hi));
+      const phase = Math.atan2(b, a);
+      const peak = phase + Math.ceil((lo - phase) / (2 * Math.PI)) * 2 * Math.PI;
+      if (peak <= hi) result = Math.max(result, c + Math.hypot(a, b));
+    }
+    return result;
+  };
+  const depth = maximum(6);
+  const height = maximum(3);
+  return { depth, height, clearance: approach ? Math.min(approach.depth - depth, approach.height - height) : Infinity };
 }
 
 /** The tilt/rotate stages that take the box from upright to `pose`: pitch, then roll, then yaw. */

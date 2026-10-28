@@ -117,12 +117,12 @@ describe("what would make it fit", () => {
   it("when the door is too narrow and the hall too shallow, asks for both, in that order", () => {
     const front = placeLibrary.find((p) => p.id === "old-flat")!.gates[0]!;
     const fixes = suggestFixes(sofa, front);
-    const widen = fixes.find((f) => f.kind === "widen")!;
     const deepen = fixes.find((f) => f.kind === "deepen")!;
-    expect(widen.to).toBeCloseTo(0.85, 2);
+    expect(deepen.changes.find((c) => c.id === "width")!.value).toBeCloseTo(0.85, 2);
     expect(deepen.to).toBeGreaterThan(2);
-    const door = front as Extract<Gate, { kind: "doorway" }>;
-    expect(planGate(sofa, { ...door, width: widen.to, approach: { ...door.approach!, depth: deepen.to } }).fits).toBe(true);
+    const after = applyFix(sofa, front, deepen);
+    expect(planGate(after.box, after.gate).fits).toBe(true);
+    expect(fixes.every((fix) => { const after = applyFix(sofa, front, fix); return planGate(after.box, after.gate).fits; })).toBe(true);
   });
 
   it("for a door that fits but a hall that is too shallow: more room in front", () => {

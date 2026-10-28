@@ -30,6 +30,9 @@ export interface SandboxHost {
   gateIndex(): number;
   gateCount(): number;
   setSwitchLabel(text: string): void;
+  swapObject(): void;
+  tryAlternative(): void;
+  hasAlternative(): boolean;
 }
 
 export interface Button {
@@ -69,8 +72,8 @@ export class Sandbox {
   /** Wire up the buttons; the scene objects are authored in the editor. */
   init(onToggle: () => void): void {
     this.buttons.mode = this.button("Mode target", "Mode label", "YOUR MOVE ›", onToggle);
-    this.buttons.object = this.button("Object target", "Object label", "NEXT OBJECT ›", () => this.nextObject());
-    this.buttons.add = this.button("Gate add target", "Gate add label", "+ GATE", () => this.addGate());
+    this.buttons.object = this.button("Object target", "Object label", "NEXT OBJECT ›", () => this.active ? this.nextObject() : this.host.swapObject());
+    this.buttons.add = this.button("Gate add target", "Gate add label", "+ GATE", () => this.active ? this.addGate() : this.host.tryAlternative());
     this.buttons.remove = this.button("Gate remove target", "Gate remove label", "– GATE", () => this.removeGate());
     this.buttons.objectChip = this.button("Object chip", "Object chip label", "OBJECT", () => { this.editObject = true; this.push(); });
     for (let i = 0; i < MAX_ROWS; i++) {
@@ -101,7 +104,7 @@ export class Sandbox {
   /** Take over the scenario on screen, with a change applied (a suggested fix): the wearer can keep editing from there. */
   public adopt(boxName: string, box: Box, gates: Gate[], gateIndex: number): void {
     const name = boxName.replace(/ \d+ x \d+ x \d+ cm$/, "");
-    const found = objectLibrary.findIndex((o) => o.name === name);
+    const found = objectLibrary.findIndex((o) => o.name.toLowerCase() === name.toLowerCase());
     this.presetIndex = found >= 0 ? found : 0;
     this.preset = found >= 0 ? objectLibrary[found] : { id: "custom", name, box, look: name.toLowerCase().indexOf("sofa") >= 0 ? "sofa" : "box" };
     this.active = true;
@@ -210,8 +213,9 @@ export class Sandbox {
     const place = (name: string, x: number, y: number, z: number) => this.find(name).getTransform().setLocalPosition(W(x, y, z));
     for (const key of Object.keys(this.buttons)) {
       const b = this.buttons[key];
-      b.object.enabled = key === "mode" ? true : on;
-      b.label.getSceneObject().enabled = key === "mode" ? true : on;
+      const visible = on || key === "mode" || key === "object" || (key === "add" && this.host.hasAlternative());
+      b.object.enabled = visible;
+      b.label.getSceneObject().enabled = visible;
     }
     const at = (target: string, label: string, row: number) => {
       place(target, LEFT_X, leftColumn(row), -108);
@@ -228,10 +232,11 @@ export class Sandbox {
     at("Object chip", "Object chip label", 3);
     object.material.mainPass.baseColor = this.editObject ? new vec4(0.6, 1, 1, 1) : new vec4(0.32, 0.53, 0.58, 1);
     // The gate buttons stay put (a control that vanishes under the wearer's pinch feels broken); at the limits they do nothing.
-    this.buttons.add.label.text = this.gates.length < MAX_GATES ? "+ GATE" : "3 GATES MAX";
+    this.buttons.object.label.text = on ? "NEXT OBJECT ›" : "SWAP OBJECT ›";
+    this.buttons.add.label.text = on ? (this.gates.length < MAX_GATES ? "+ GATE" : "3 GATES MAX") : "TRY ANOTHER ROUTE ›";
     this.buttons.remove.label.text = this.gates.length > 1 ? "– GATE" : "1 GATE MIN";
-    at("Object target", "Object label", 4);
-    at("Gate add target", "Gate add label", 5);
+    at("Object target", "Object label", on ? 4 : 3);
+    at("Gate add target", "Gate add label", on ? 5 : 4);
     at("Gate remove target", "Gate remove label", 6);
     for (let i = 0; i < MAX_ROWS; i++) {
       const row = this.rows[i];

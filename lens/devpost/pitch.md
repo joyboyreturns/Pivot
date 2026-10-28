@@ -16,7 +16,8 @@ PIVOT plans the whole move for **any object and any place**, and shows it as a m
 - **The whole move at once.** A seven-frame ghost trail shows the path with the tightest moment tinted, and the ghost replays it by itself (tip, turn, slide, swing round the corner). Pinch the arrow to step, drag the rail to scrub.
 - **Try the fix.** When something is blocked, tags on the model say the smallest change that works: "Widen to 85 cm", "5 cm lower (legs off)", "Hall to 227 cm". Pinch one and PIVOT applies it and re-plans the whole route, so you watch the verdict flip.
 - **Drag the edges.** Handles on the object's and the gate's edges: pinch, pull, the number follows your hand and PIVOT re-plans live.
-- **Any object, any place.** 12 objects, 6 places, or *Your move*: edit every number (object size; door width and height, the room in front, ceiling, lift cabin, hallway widths), add and remove gates (doorway, corridor, lift, L-shaped corner).
+- **Any object, any place.** 17 objects, 9 places, or *Your move*: edit every number (object size; door width and height, the room in front, ceiling, lift cabin, hallway widths), add and remove gates (doorway, corridor, lift, L-shaped corner).
+- **Compare before carrying.** A gallery crate uses the loading entrance, a workshop bench uses double doors, and a delivery crate uses the goods lift. Try an alternative route with the same object, or swap the object while keeping the route.
 - **How big could it be.** "This route allows up to 105% of this size", or "shrink to 94% to fit".
 - **Honest about what it checked.** A step says **Verified step** only if the geometry was checked, including the room to turn it. A turn where nobody measured the hall, and every no-fit illustration, says **Unverified maneuver**.
 
@@ -28,7 +29,7 @@ Things a doorway-only check cannot tell you, and PIVOT does:
 
 ## Why it stands out
 Every entry is planned with the same skill pack and built with the same agent tools. What differs is what is built.
-- **A real algorithm, not a prompt.** The planner is 86 unit tests of geometry: oriented-box pose search, an exact L-turn solver (matches the closed form), approach-space sweeps, bisection for fixes. The Lens draws what it says; nothing is faked per scenario.
+- **A real algorithm, not a prompt.** The planner is 107 unit tests of geometry: oriented-box pose search, an exact L-turn solver (matches the closed form), approach-space sweeps, bisection for fixes. The Lens draws what it says; nothing is faked per scenario.
 - **It says what it did not check.** Verified versus unverified is in the data model and on every step.
 - **It tells you what to do next.** A verdict is not enough; PIVOT proposes the fix and lets you try it.
 - **Designed to the glasses, not to a screen.** Layout numbers (distance, height, field of view) live in one file and a LEAF scenario asserts them.
@@ -37,11 +38,11 @@ Every entry is planned with the same skill pack and built with the same agent to
 The object, the opening and the answer sit together at world scale. You look at a model of the move on the table in front of you, step into life size at the gate, walk round it (the labels turn to face you), look at the tight spot and watch the ghost pass it. Your hands are free to pinch. On a phone you would look at a screen about a doorway; here you look at the doorway.
 
 ## How it works
-A pure TypeScript planner (no engine imports, 86 unit tests) and a thin Lens.
+A pure TypeScript planner (no engine imports, 107 unit tests) and a thin Lens.
 - Object = oriented box. Pose search over pitch, yaw and roll, then a 5 degree refinement for tight gates.
 - Gates: doorway, corridor, lift (door and cabin in the same pose), 90 degree L-turn.
 - L-turn: the footprint is swept through every angle of the swing against the inside corner. Pushing toward the outer corner never hurts, which turns the planning problem into one clipped-polygon test per angle; bisection on the hall widths gives the slack. It matches the closed form for equal halls.
-- Approach clearance: tilts and turns are sampled along the interpolated rotation against the depth and ceiling in front of the gate.
+- Approach clearance: single-axis tilts and turns check exact vertex extrema throughout the rotation against the depth and ceiling in front of the gate.
 - Fixes: bisection on each gate and object dimension for the smallest change that makes a blocked gate pass; the largest uniform scale a route allows.
 - The Lens (Spectacles Interaction Kit, mouse-simulated pinch in the preview) draws everything from the plan. Nothing is authored per scenario.
 
@@ -49,7 +50,7 @@ A pure TypeScript planner (no engine imports, 86 unit tests) and a thin Lens.
 Planned in `devpost/design-brief.md`, built by a coding agent driving Lens Studio through the Lens Studio MCP (scene and asset GraphQL, VirtualScene, runtime scene queries, preview interaction, screenshots, logs) and tested with LEAF: 12 scenarios run in the preview. See `build-notes.md`.
 
 ## What is real and what is not
-- Logic proven: the planner (86 tests) and the Lens flow (12 LEAF scenarios in Lens Studio's Interactive Preview).
+- Logic proven: the planner (107 tests) and the earlier Lens flow. The expanded revision has 12 LEAF scenarios; see `../../docs/HANDOFF.md` for its current rerun status.
 - Feel unproven: no SPECS device was available. Comfort, text legibility on the real display, reach of the small pinch targets and hand tracking are untested.
 - Dimensions are set by hand (drag the handles or use the steppers), not sensed. On glasses the same handles would be pulled onto the real door edges; that is not built.
 - Furniture is a bounding box, so a real sofa that compresses or has removable legs may fit where PIVOT says no. Not modelled: stairs, wall thickness while tilting through, rotating inside a lift, doors that open.

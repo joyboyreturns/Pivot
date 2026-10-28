@@ -1,6 +1,8 @@
 import { cornerCentre, solveCorner } from "./corner";
 import { gateClearance, isPoseGate, rotationChain, sweepChain, sweepSegment } from "./gates";
 import type { PoseGate } from "./gates";
+import { validateInput } from "./validation";
+import { extents } from "./geometry";
 import type {
   Approach,
   Box,
@@ -67,12 +69,14 @@ function choosePose(box: Box, gate: PoseGate, approach: Approach | null, step: n
     for (let yaw = 0; yaw < 180; yaw += step)
       for (let roll = 0; roll < 180; roll += step) {
         const pose = { pitch, yaw, roll };
+        if (comfy && effort(pose) > effort(comfy.pose) + EPS) continue;
         const e = evaluate(pose, best);
         if (e.total > best.total + EPS) best = { pose, ...e };
         if (e.total < comfortable - EPS) continue;
         const dEffort = comfy ? effort(pose) - effort(comfy.pose) : -1;
         // Least rotation wins; at equal rotation, the roomier pose wins.
         if (!comfy || dEffort < -EPS || (Math.abs(dEffort) <= EPS && e.total > comfy.total + EPS)) comfy = { pose, ...e };
+        if (comfy && effort(comfy.pose) === 0) return comfy;
       }
   return comfy ?? refine(best, step, fine, (pose, b) => evaluate(pose, b));
 }
@@ -151,7 +155,13 @@ function planThroughPoseGate(box: Box, gate: PoseGate, options: PlanOptions): Pl
 
   const chain = rotationChain(pose);
   const rotates = chain.length > 0;
-  const steps: PlanStep[] = [{ kind: "start", pose: UPRIGHT, at: at(APPROACH_Z), clearance: null, verified: true, hint: "Start here" }];
+  // Keep the entire turning sweep in front of the wall, then carry the whole object beyond it.
+  const needed = sweepChain(box, null, pose);
+  const depth = Math.max(extents(box, UPRIGHT).z, needed.depth, extents(box, pose).z);
+  const startZ = depth / 2 + 0.15;
+  const slideZ = extents(box, pose).z / 2 + 0.05;
+  const passZ = -extents(box, pose).z / 2 - 0.15;
+  const steps: PlanStep[] = [{ kind: "start", pose: UPRIGHT, at: at(startZ), clearance: null, verified: true, hint: "Start here" }];
   let prev = UPRIGHT;
   for (const stage of chain) {
     const sweep = sweepSegment(box, approach, prev, stage.pose);
@@ -159,7 +169,7 @@ function planThroughPoseGate(box: Box, gate: PoseGate, options: PlanOptions): Pl
     steps.push({
       kind: stage.kind,
       pose: stage.pose,
-      at: at(APPROACH_Z),
+      at: at(startZ),
       clearance: measured ? sweep.clearance : null,
       verified: measured && sweep.clearance >= -EPS,
       hint: stage.hint,
@@ -170,7 +180,7 @@ function planThroughPoseGate(box: Box, gate: PoseGate, options: PlanOptions): Pl
   steps.push({
     kind: "slide",
     pose,
-    at: at(SLIDE_Z),
+    at: at(slideZ),
     clearance: settle,
     verified: !rotates || (settle !== null && settle >= -EPS),
     hint: "Slide it up to the doorway",
@@ -178,13 +188,12 @@ function planThroughPoseGate(box: Box, gate: PoseGate, options: PlanOptions): Pl
   steps.push({
     kind: "pass",
     pose,
-    at: at(PASS_Z),
+    at: at(passZ),
     clearance: choice.gate,
     verified: true,
     hint: `Now ${hint(pose)}: ${centimetres(choice.gate)} to spare`,
   });
 
-  const needed = sweepChain(box, null, pose);
   return {
     fits: true,
     steps,
@@ -208,6 +217,8 @@ interface CornerCandidate {
   direction: 1 | -1;
   ceilingSlack: number;
   total: number;
+  gateTotal: number;
+  tiltClearance: number | null;
 }
 
 function cornerCandidate(box: Box, gate: CornerGate, tipped: boolean): CornerCandidate {
@@ -216,6 +227,8 @@ function cornerCandidate(box: Box, gate: CornerGate, tipped: boolean): CornerCan
   const vertical = tipped ? box.depth : box.height;
   const sol = solveCorner(footprint, gate.inWidth, gate.outWidth);
   const ceilingSlack = gate.height - vertical;
+  const tiltClearance = tipped ? sweepSegment(box, { depth: gate.inWidth, height: gate.height }, UPRIGHT, { pitch: 90, yaw: 0, roll: 0 }).clearance : null;
+  const gateTotal = Math.min(sol.slack, ceilingSlack);
   return {
     tipped,
     pose: { pitch: tipped ? 90 : 0, yaw: 0, roll: 0 },
@@ -225,7 +238,9 @@ function cornerCandidate(box: Box, gate: CornerGate, tipped: boolean): CornerCan
     tightestAngle: sol.tightestAngle,
     direction: sol.direction,
     ceilingSlack,
-    total: Math.min(sol.slack, ceilingSlack),
+    gateTotal,
+    tiltClearance,
+    total: Math.min(gateTotal, tiltClearance ?? Infinity),
   };
 }
 
@@ -265,7 +280,7 @@ function planCorner(box: Box, gate: CornerGate, options: PlanOptions): Plan {
     kind: "pass",
     pose: yawPose(tightestAngle),
     at: frame(tightestAngle),
-    clearance: pick.total,
+    clearance: pick.gateTotal,
     verified: true,
     hint: `Tightest at ${Math.abs(Math.round(tightestAngle))} degrees into the turn: ${centimetres(pick.total)} to spare`,
   });
@@ -278,10 +293,10 @@ function planCorner(box: Box, gate: CornerGate, options: PlanOptions): Plan {
     steps,
     bottleneckIndex: indexOfTightest(steps),
     clearance: pick.total,
-    gateClearance: pick.total,
+    gateClearance: pick.gateTotal,
     approachClearance: pick.tipped ? tiltSweep.clearance : null,
-    reason: fits ? "ok" : "gate",
-    approachNeeded: null,
+    reason: fits ? "ok" : pick.gateTotal >= -EPS ? "approach" : "gate",
+    approachNeeded: pick.tipped ? { depth: tiltSweep.depth, height: tiltSweep.height } : null,
     verified: fits && steps.every((s) => s.verified),
     turn: {
       footprint,
@@ -303,10 +318,11 @@ function planCorner(box: Box, gate: CornerGate, options: PlanOptions): Plan {
  * is false); other gates return no steps when nothing fits.
  */
 export function planGate(box: Box, gate: Gate, options: PlanOptions = {}): Plan {
+  validateInput(box, gate, options);
   return isPoseGate(gate) ? planThroughPoseGate(box, gate, options) : planCorner(box, gate, options);
 }
 
 /** Plan how to carry `box` through a doorway. Pass `options.approach` to check the tilts and turns too. */
 export function planMove(box: Box, door: Doorway, options: PlanOptions = {}): Plan {
-  return planThroughPoseGate(box, { kind: "doorway", name: "Doorway", width: door.width, height: door.height }, options);
+  return planGate(box, { kind: "doorway", name: "Doorway", width: door.width, height: door.height }, options);
 }

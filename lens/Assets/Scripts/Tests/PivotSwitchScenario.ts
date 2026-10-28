@@ -3,7 +3,8 @@ import { expect } from "Leaf.lspkg/Utils/common/Expect";
 import { sleep } from "Leaf.lspkg/Utils/common/Utils";
 import { goToScenario, has, SCENARIO_COUNT, tap, textOf } from "./PivotTestUtils";
 
-const VERDICTS = ["ROUTE BLOCKED", "ROUTE CLEAR", "ROUTE BLOCKED", "ROUTE CLEAR", "ROUTE FITS, ONLY JUST", "ROUTE BLOCKED", "ROUTE CLEAR"];
+import { scenarios } from "../Planner/index";
+const VERDICTS = scenarios.map((s) => s.expected === "blocked" ? "ROUTE BLOCKED" : s.expected === "tight" ? "ROUTE FITS, ONLY JUST" : "ROUTE CLEAR");
 
 /** Scenario switcher: pinching cycles all scenarios, each with the verdict the planner gives, and wraps round. */
 @component

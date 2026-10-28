@@ -4,7 +4,9 @@ import { findInteractablesByName } from "Leaf.lspkg/Interactors/InteractableUtil
 import type { PivotManeuver } from "../PivotManeuver";
 import { DefaultLeafInteractor } from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor";
 
-export const SCENARIO_COUNT = 7;
+import { scenarios } from "../Planner/index";
+
+export const SCENARIO_COUNT = scenarios.length;
 
 export function textOf(name: string): string {
   return (findSceneObjectByName(name).getComponent("Component.Text3D") as Text3D).text;

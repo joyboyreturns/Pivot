@@ -11,12 +11,13 @@ Built for the Learn AR with SPECS challenge.
 ## What it does
 
 - **Route gates.** Doorway, corridor, lift (door and cabin in the same pose) and a 90 degree L-turn. The L-turn sweeps the object's footprint through every angle against the inside corner and finds the narrowest hall it can turn in.
+- **Compare routes.** Gallery deliveries, workshop moves and cargo loads offer a measured alternative route. Pinch **Try another route** to compare it with the same object; pinch again to return. **Swap object** keeps the route while replacing the load.
 - **Route planner.** `planRoute(box, gates)` plans every gate, names the bottleneck, and gives one verdict.
 - **Verified versus unverified.** Tilts and turns are checked against the room in front of the gate (swing depth and ceiling). Where that room was not given, the step is shown as an "Unverified maneuver" and counted.
 - **Inverse questions.** The smallest doorway a sofa needs, and a fit matrix of furniture against routes.
 - **What would make it fit.** When a gate blocks, PIVOT says the smallest change that works: widen the opening to 85 cm, give the hall 2.3 m, take 5 cm off the height (legs off), widen both halls. It also says how big the object could be: "this route allows up to 104% of this size".
-- **Any object, any place.** A library of 12 objects and 6 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) can be changed, and routes can have up to three gates of any type.
-- **Seven scenarios** with story text: studio flat sofa, the same sofa with a 95 cm door, "the door fits but the hall does not", wardrobe by lift, a tight hallway corner, a queen mattress that cannot ride the lift, a wardrobe down a low corridor.
+- **Any object, any place.** A library of 17 objects and 9 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) can be changed, and routes can have up to three gates of any type.
+- **Twelve scenarios** with story text: studio flat sofa, the same sofa with a 95 cm door, "the door fits but the hall does not", wardrobe by lift, a tight hallway corner, a queen mattress that cannot ride the lift, a wardrobe down a low corridor, backstage equipment, gallery art crates, a workshop bench, an empty aquarium and a delivery crate.
 
 ## In the Lens (Lens Studio 5.23, Interactive Preview)
 
@@ -40,7 +41,7 @@ No SPECS device was available. Everything was run in Interactive Preview with mo
 
 ## Status
 
-Planner core and Lens experience working. 86 Vitest tests (`npm test`) and 12 LEAF scenarios under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 107 Vitest tests (`npm test`) and 12 LEAF scenarios (current revision rerun status in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 
