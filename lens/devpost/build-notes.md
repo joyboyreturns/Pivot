@@ -11,7 +11,7 @@ How PIVOT was built, for the Technical Implementation criterion and the disclosu
    - `RecompileTypeScriptTool` and `RunAndCollectLogsTool` after every change, reading the log for errors;
    - `CapturePanelScreenshotTool`, `MovePreviewCamera` and `PreviewInteractTool` to look at every scenario, walk round the gate and pinch, drag and hover;
    - `ExecuteEditorCode` to save the project.
-4. **LEAF.** Eleven scenarios under `Assets/Scripts/Tests` drive the Lens with SIK interactions and assert on labels, positions and scale (scene and scale, no-fit and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box and lift, hands-free replay, your-move sandbox, the move table's placement and callouts). A failure message names the check and what was seen.
+4. **LEAF.** Twelve scenarios under `Assets/Scripts/Tests` drive the Lens with SIK interactions and assert on labels, positions and scale (scene and scale, no-fit and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box and lift, hands-free replay, your-move sandbox, dragging the edge handles, the move table's placement and callouts). A failure message names the check and what was seen.
 
 ## Redesign against the design rules
 After a first working version (flat labels at 5 m, small chips) the Lens was re-read against the SPECS design habits and rebuilt: a 1:10 model on a table 1.1 m ahead and below eye level, numbers on the thing they describe, a trail of the whole move, fix tags you can pinch, few large targets. All placement numbers are in `PivotLayout.ts`; `PivotMoveTableScenario` asserts that every control and label is inside the view and reach.

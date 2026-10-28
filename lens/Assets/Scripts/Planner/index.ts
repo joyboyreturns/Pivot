@@ -16,3 +16,5 @@ export { boxParams, withBoxParam, gateParams, withGateParam, defaultGate, nextGa
 export { objectLibrary, placeLibrary, customScenario } from "./library";
 export type { ObjectPreset, PlacePreset } from "./library";
 export { suggestFixes, maxScale } from "./fixes";
+export { boxHandles, gateHandles, applyHandle, PROPOSED_HALL } from "./handles";
+export type { HandleSpec } from "./handles";

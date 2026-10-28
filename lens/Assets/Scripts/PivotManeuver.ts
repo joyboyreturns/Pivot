@@ -59,6 +59,14 @@ export class PivotManeuver extends BaseScriptComponent {
     return Math.min(1, maxProgress(this.analysis.currentPlan));
   }
 
+  /** Stop the hands-free replay and put the ghost back at the start (the tests drive it themselves from there). */
+  public rewind(): void {
+    this.autoPlay = false;
+    this.autoClock = 0;
+    this.target = 0;
+    this.progress = 0;
+  }
+
   private applyRevision(): void {
     this.revision = this.analysis.revision;
     this.progress = 0;

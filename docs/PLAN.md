@@ -38,7 +38,7 @@ Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.c
 - [x] Library of 12 objects and 6 places; free-form routes of up to 3 gates
 - [x] "What would make it fit": smallest widening, hall depth, cabin depth, halls or object change (`suggestFixes`)
 - [x] "How big could it be": `maxScale`
-- [x] *Your move* mode in the Lens: Next object, Next place, + Gate, - Gate, steppers on every parameter
+- [x] *Your move* mode in the Lens: Next object, Next place, + Gate, - Gate, steppers on every parameter, plus draggable handles on the object's and gate's edges (`handles.ts`, `PivotHandles.ts`)
 - [x] LEAF scenario for the sandbox
 
 ## Step 3c: The move table (design-rules overhaul) - done in Preview

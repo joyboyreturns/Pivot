@@ -1,5 +1,6 @@
-import { applyFix, planRoute, scenarios, suggestFixes, maxScale } from "./Planner/index";
-import type { Fix, Gate, Plan, RoutePlan, Scenario } from "./Planner/index";
+import { applyFix, boxHandles, frameAt, gateHandles, planRoute, scenarios, suggestFixes, maxScale } from "./Planner/index";
+import type { Fix, Gate, HandleSpec, Plan, RoutePlan, Scenario } from "./Planner/index";
+import { Handles } from "./PivotHandles";
 import { StageFx } from "./PivotStageFx";
 import { TapInteraction } from "./TapInteraction";
 import { GateView, TONES, toneFor } from "./PivotGateView";
@@ -80,6 +81,7 @@ export class PivotAnalysis extends BaseScriptComponent {
   private sandbox!: Sandbox;
   private lifeSize = false;
   private fx!: StageFx;
+  private handles!: Handles;
   private fixes: Fix[] = [];
   private fixTags: { object: SceneObject; label: Text3D; hideAt: number }[] = [];
   private sizeLabel!: Text3D;
@@ -225,6 +227,9 @@ export class PivotAnalysis extends BaseScriptComponent {
     if (this.table) this.table.enabled = !this.lifeSize;
     this.fx.showTrail(s, plan, this.gateTone(plan));
     this.fx.showCallouts(s, gate, plan, this.gateTone(plan));
+    const start = frameAt(plan, 0);
+    const upright = start.pose.pitch === 0 && start.pose.yaw === 0 && start.pose.roll === 0;
+    this.handles.show([...(upright ? boxHandles(s.box, start.position) : []), ...gateHandles(gate)], this.lifeSize ? 9 : 2.4);
     this.doorDimensions.text = describeGateShort(gate);
     this.result.text = this.resultText(gate, plan);
     this.detailText.text = this.detailTextFor(gate, plan);
@@ -281,6 +286,25 @@ export class PivotAnalysis extends BaseScriptComponent {
     return this.stage.getTransform().getWorldTransform().multiplyPoint(p);
   }
 
+  /** Stage-local point (cm of the room) under a world position. */
+  public worldToStage(p: vec3): vec3 {
+    return this.stage.getTransform().getInvertedWorldTransform().multiplyPoint(p);
+  }
+
+  /** A handle was grabbed (`begin`: take over the scenario on screen) or pulled `delta` metres along its axis. */
+  private onHandle(from: HandleSpec, delta: number, begin: boolean): void {
+    if (begin) {
+      if (!this.sandbox.active) this.sandbox.adopt(this.scenario.boxName, this.scenario.box, this.scenario.gates, this.gateIndex);
+      return;
+    }
+    this.sandbox.dragHandle(from, delta);
+  }
+
+  /** Move a handle from code the way a hand would (used by the tests). */
+  public dragHandle(key: string, stagePoint: vec3): boolean {
+    return this.handles.dragTo(key, stagePoint);
+  }
+
   public get isLifeSize(): boolean {
     return this.lifeSize;
   }
@@ -311,7 +335,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     const rail = this.find("Timeline rail").getTransform();
     rail.setLocalPosition(RAIL_AT());
     rail.setLocalScale(new vec3(RAIL_HALF * 2, 0.5, 0.5));
-    put("Doorway Dimensions", 22, 14);
+    put("Doorway Dimensions", 22, this.sandbox.active ? 20 : 14);
     put("Sofa Dimensions", 22, this.sandbox.active ? 40 : -17);
     for (let i = 0; i < MAX_CHIPS; i++) {
       this.find(`Gate chip ${i + 1}`).getTransform().setLocalPosition(tokenAt(i));
@@ -383,6 +407,15 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.sandbox.init(() => this.toggleSandbox());
       this.fx = new StageFx(this.stage, this.boxMesh, this.ghostPanelMaterial, this.glowMaterial, [1, 2, 3].map((i) => this.text(`Callout label ${i}`)), (p) => this.stageToWorld(p));
       for (const i of [1, 2, 3]) this.text(`Callout label ${i}`).size = SIZES.tag;
+      this.handles = new Handles(
+        this.root,
+        this.boxMesh,
+        this.glowMaterial,
+        this.text("Handle label"),
+        (p) => this.stageToWorld(p),
+        (w) => this.worldToStage(w),
+        (from, delta, begin) => this.onHandle(from, delta, begin)
+      );
       for (const i of [0, 1]) {
         const wired = wireButton(this.find.bind(this), this.text.bind(this), `Fix tag ${i + 1}`, `Fix tag label ${i + 1}`, "", () => this.tryFix(i));
         wired.label.size = SIZES.tag;
@@ -406,7 +439,7 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.result.getSceneObject().enabled = false;
       this.scan.enabled = false;
       // Labels turn about the vertical to face the wearer, so they stay readable while walking round the gate.
-      const names = ["Callout label 1", "Callout label 2", "Callout label 3", "Fix tag label 1", "Fix tag label 2", "Size label", "Mode label", "Object label", "Gate add label", "Gate remove label", "Object chip label", "Param label 1", "Param label 2", "Param label 3", "Param label 4", "Param label 5", "Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
+      const names = ["Callout label 1", "Callout label 2", "Callout label 3", "Handle label", "Fix tag label 1", "Fix tag label 2", "Size label", "Mode label", "Object label", "Gate add label", "Gate remove label", "Object chip label", "Param label 1", "Param label 2", "Param label 3", "Param label 4", "Param label 5", "Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
       this.billboards = names.map((n) => this.find(n));
       for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
         const o = global.scene.getRootObject(i);
@@ -416,6 +449,10 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.finished = false;
       this.elapsed = 0;
       this.scanEnd = SCAN_END;
+    });
+
+    this.createEvent("LateUpdateEvent").bind(() => {
+      if (this.handles) this.handles.late();
     });
 
     this.createEvent("UpdateEvent").bind(() => {

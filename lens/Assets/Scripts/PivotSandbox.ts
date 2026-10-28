@@ -1,7 +1,7 @@
 import { TapInteraction } from "./TapInteraction";
 import { LEFT_X, RIGHT_X, SIZES, W, leftColumn, textWidth } from "./PivotLayout";
-import { boxParams, customScenario, gateParams, nextGate, objectLibrary, placeLibrary, withBoxParam, withGateParam } from "./Planner/index";
-import type { Box, Gate, Param, Scenario } from "./Planner/index";
+import { applyHandle, boxParams, customScenario, gateParams, nextGate, objectLibrary, placeLibrary, withBoxParam, withGateParam } from "./Planner/index";
+import type { Box, Gate, HandleSpec, Param, Scenario } from "./Planner/index";
 import type { ObjectPreset } from "./Planner/index";
 
 const MAX_ROWS = 5;
@@ -181,6 +181,15 @@ export class Sandbox {
       const at = this.host.gateIndex();
       this.gates = this.gates.map((g, i) => (i === at ? withGateParam(g, p.id, v) : g));
     }
+    this.push();
+  }
+
+  /** A handle was pulled `delta` metres from where it began: change the object or the selected gate and plan again. */
+  public dragHandle(spec: HandleSpec, delta: number): void {
+    const at = Math.min(this.host.gateIndex(), this.gates.length - 1);
+    const next = applyHandle(this.box, this.gates[at], spec, delta);
+    this.box = next.box;
+    this.gates = this.gates.map((g, i) => (i === at ? next.gate : g));
     this.push();
   }
 

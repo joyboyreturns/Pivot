@@ -940,6 +940,21 @@
     []
   Components:
     - !<own> 6f6c584b-8e3f-4878-be43-44d852cbc199
+- !<SceneObject/1f1ef234-849a-4f6b-9550-d0546657b408>
+  PrefabRemaps:
+    []
+  Name: Handle label
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 10.000000, y: 193.000000, z: 190.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 99087923-621a-43ca-95cf-e481f5923e8b
 - !<RenderMeshVisual/1f969daa-5809-4500-b314-98d91ccba131>
   PrefabRemaps:
     []
@@ -3950,6 +3965,45 @@
     LineSpacing: 1.000000
     CapitalizationOverride: None
   EnableBatching: false
+- !<Text3D/99087923-621a-43ca-95cf-e481f5923e8b>
+  PrefabRemaps:
+    []
+  Name: Text3D
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 845df8cb-f1bc-4122-991c-635503d8200b
+  Text: 0.80 / 0.95 m   PINCH →
+  Editable: false
+  ShowEditingPreview: true
+  TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
+  EnableRichText: false
+  SizeToFit: false
+  FontSize: 120.000000
+  ExtrusionDepth: 0.400000
+  ExtrudeDirection: Both
+  FontSource: !<reference> 00000000-0000-0000-0000-000000000000
+  PreferredStyle: Regular
+  LayoutRect:
+    left: -55.000000
+    bottom: -2.250000
+    right: 55.000000
+    top: 2.250000
+  DebugRenderLayoutRect: false
+  OverflowVertical: Overflow
+  OverflowHorizontal: Overflow
+  AdvancedLayout: !<TextAdvancedLayout>
+    ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+    LetterSpacing: 0.000000
+    LineSpacing: 1.000000
+    CapitalizationOverride: None
+  EnableBatching: false
 - !<Text3D/997ed038-3ca2-4c20-b3e6-62a109a1174a>
   PrefabRemaps:
     []
@@ -4378,6 +4432,7 @@
     - !<own> 4ae54d2c-1091-4f8b-a947-bc3df4504e02
     - !<own> 4e454542-41d1-434e-80f9-74b8164910d3
     - !<own> d916cac3-ee61-43ec-b9c8-30b6c0e4250d
+    - !<own> 1f1ef234-849a-4f6b-9550-d0546657b408
   Components:
     []
 - !<SceneObject/aaa781d3-5439-4198-acbc-7488b26b38ae>

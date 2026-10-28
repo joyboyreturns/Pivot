@@ -74,6 +74,7 @@ The solver also tries laying the object on its back (depth vertical) when uprigh
 ### Any object, any place
 
 - `builder.ts`: every box and gate exposes its editable numbers as `Param` rows (`boxParams`, `gateParams`) and returns edited copies (`withBoxParam`, `withGateParam`), clamped and rounded to a centimetre. A hall depth of 0 means "not measured": the approach is dropped and the turn becomes unverified. `defaultGate` and `nextGate` build routes.
+- `handles.ts`: where each grab point sits (`boxHandles`, `gateHandles`) and what a drag changes (`applyHandle`), as pure functions the Lens only draws.
 - `library.ts`: 12 objects (`objectLibrary`), 6 places (`placeLibrary`) and `customScenario` for the Lens's *Your move* mode.
 - `fixes.ts`: `suggestFixes(box, gate)` finds the smallest change that makes a blocked gate pass: widen the opening (judged without the approach space first, then, if the turn is still blocked, the hall depth needed), a deeper cabin, wider halls, or a smaller object (height, depth or length, capped at 25 cm). Each search is a bisection with the quick planner (30 degree steps) confirmed by the full planner. `maxScale(box, gates)` is the largest uniform scale the whole route allows.
 
@@ -92,6 +93,7 @@ From the SPECS design material the hackathon is built on: not a website floating
 | `PivotLayout` | Where everything sits: the move table 1.1 m ahead and below eye level, model scale 1:10, positions of controls and labels inside +-36 cm sideways, and text sizes. One file, so the comfort numbers live in one place. |
 | `PivotStageFx` / `PivotPose` | The trail of ghost frames and the dimension lines with their numbers, drawn on the stage; the pose math shared with the ghost. |
 | `PivotAnalysis` | Holds the scenario and selected gate, runs `planRoute`, writes the labels (title, story, route verdict, result, detail), keeps gate chips, restarts the brief scan on each change. Pinch Next scenario cycles. |
+| `PivotHandles` | Draws the handles from the planner's specs, uses the Interactable and InteractableManipulation of the Spectacles Interaction Kit, turns hand movement into a distance along the handle's axis (throttled to 20 Hz), and snaps each handle back onto its edge. |
 | `PivotSandbox` | *Your move*: object and place pickers, add and remove gates, a stepper row for every parameter of the selected object or gate. It only edits an object and a list of gates and hands the result to `PivotAnalysis`. |
 | `PivotGateView` | Pool of box panels built at runtime from the gate: doorway frame, corridor walls, lift cabin, cutaway L-hall, floor line for the approach limit, a tone-coloured bottleneck marker. |
 | `PivotManeuver` | Ghost playback from `frameAt`; the object rotates about the middle of its volume and rests on the floor. Sofa mesh for sofas, a real-size box with details (wardrobe doors, mattress quilting) otherwise. Replays the maneuver by itself after each analysis (`autoPlay`); the first pinch or drag takes over. Arrow steps, rail scrubs, label says verified step or Unverified maneuver. |
@@ -102,8 +104,8 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (79 tests): geometry, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
-- LEAF (11 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, the move table (controls and labels inside the field of view, model scale, callouts, trail, life size).
+- Vitest (86 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- LEAF (12 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, dragging handles (door, hall, object, L-turn), the move table (controls and labels inside the field of view, model scale, callouts, trail, life size).
 
 ## Not modelled (cut first)
 
