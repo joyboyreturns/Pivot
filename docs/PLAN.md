@@ -54,14 +54,16 @@ Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.c
 - [x] `assessRoute`: conservative re-measure of the nominal maneuver under stated object and room error, separate carry margin, 19 tests with hand-worked fixtures
 - [x] Corner sampling bound (`cornerSamplingAllowance`) and a swing-direction option in `solveCorner`
 - [x] Docs and pitch: "any object, any place" and "exact L-turn" wording qualified; gates judged independently; "verified" defined
-- [ ] One Lens scenario that shows the tolerance result (needs Lens Studio access; not built)
-- [ ] Re-run all LEAF scenarios after `npm run sync` (planner text changed; not run)
+- [x] The Lens shows the tolerance result for the workshop bench scenario (stated error ±5 mm): a summary line, a per-gate "AT ±5 MM" detail, and the LEAF scenario `pivot-tolerance`
+- [x] Re-run all LEAF scenarios after `npm run sync` (29 Oct, 14 of 14 passed in the preview)
 
 ## Step 4: Polish (4-6 Nov)
 
 - [x] Walk-around check with the preview camera (orbit), L-turn framing, text stack, switch size, long titles
-- [ ] Sound cues (none yet: no audio assets added)
-- [ ] Record the video (under 3 minutes, public on YouTube), capture images, write the Devpost description from `lens/devpost/pitch.md`
+- [x] Sound cues: two short cues (`lens/Assets/GeneratedSFX/pivot-fit.wav`, `pivot-nofit.wav`) play when a result appears; the chime for a fit, the lower tone for no fit or a fit too close to confirm. Generated algorithmically (no samples). Checked for runtime errors and for which cue is chosen; not listened to by the assistant, so the owner should hear them and the volume (0.6) before recording
+- [x] Capture images: four Preview screenshots in `lens/devpost/images/` (blocked sofa, bench corner "too close to confirm at ±5 mm", double doors holding, life size), taken 29 Oct on the current code. The owner should pick which to upload
+- [x] Devpost description drafted in `lens/devpost/pitch.md` (owner to read, edit and paste)
+- [ ] Record the video (under 3 minutes, public on YouTube): owner
 - Done when: video and images are ready.
 
 ## Step 5: Submit (7-8 Nov)
@@ -87,7 +89,7 @@ Judging is two stages: pass/fail viability (uses the required tools, meets the r
 - [ ] Demo video under 3 minutes, public on YouTube, screen recording of the Lens Studio preview, no third-party trademarks or copyrighted music (`lens/devpost/demo-outline.md`)
 - [ ] Public repo (GitHub, GitLab or Bitbucket) with the Lens Studio project and the `devpost/` folder
 - [ ] Text description of features and functionality (`lens/devpost/pitch.md`)
-- [ ] Disclose pre-existing code: Spectacles Interaction Kit, LEAF, the Interior Props package and Lens Studio template materials; everything under `src/`, `lens/Assets/Scripts` (except `DragInteraction.ts`, `TapInteraction.ts`, adapted from the SIK recipes) and `tests/` was written during the Submission Period (first commit 27 Oct 2026)
+- [ ] Disclose pre-existing code: Spectacles Interaction Kit, LEAF, the Interior Props package and Lens Studio template materials; the two sound cues were synthesised with the Lens Studio agent toolkit's SFX generator (no recorded samples); everything under `src/`, `lens/Assets/Scripts` (except `DragInteraction.ts`, `TapInteraction.ts`, adapted from the SIK recipes) and `tests/` was written during the Submission Period (first commit 27 Oct 2026)
 - [ ] Show the process in the video if time allows: design brief, the agent building through the Lens Studio MCP, LEAF runs (`lens/devpost/build-notes.md`)
 - [ ] Submit from one Representative's account; prizes are paid to the Representative
 

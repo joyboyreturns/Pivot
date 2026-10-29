@@ -34,11 +34,11 @@ A caption on screen carries each beat, so the video also works with the sound of
 ## After the tour (2:36-2:55): how it was built, and the limits
 
 Cut to the Lens Studio window and show, in this order, about five seconds each:
-- the LEAF panel with the 13 scenarios passing, **pivot-tour** among them (it runs this very tour and checks every beat);
+- the LEAF panel with the 14 scenarios passing, **pivot-tour** among them (it runs this very tour and checks every beat);
 - `npm test` in a terminal: 131 passing;
 - `lens/devpost/design-brief.md`.
 
-Say: "A real planner with 131 tests, and 13 LEAF scenarios run in the preview, including this tour. Built by a coding agent through the Lens Studio MCP. What I could not do is try it on glasses, so the feel of the text and the pinch targets is unproven."
+Say: "A real planner with 131 tests, and 14 LEAF scenarios run in the preview, including this tour. Built by a coding agent through the Lens Studio MCP. What I could not do is try it on glasses, so the feel of the text and the pinch targets is unproven."
 
 A 3-second title card at the start ("PIVOT: before you lift it, know if it fits") brings the total to about 2:55. Do not go over 3:00.
 

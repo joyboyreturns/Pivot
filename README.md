@@ -35,14 +35,14 @@ PIVOT is designed to the SPECS design habits, not as a screen in the air:
 - After the analysis scan the ghost plays the maneuver by itself; pinch the **arrow** to step it or drag the **rail** to scrub, and your first touch takes over.
 - Labels turn to face you, so you can walk round the gate and still read them.
 - The doorway, lift cabin, corridor or L-shaped hall is drawn at real size (cm). A red, amber or green marker sits at the tightest point; a floor line shows where the room in front of the gate ends.
-- The planner can also re-judge a route under stated measurement error (`assessRoute`: object may be larger, room smaller): a fit that cannot be confirmed reads "too close to confirm". This is a geometric check under the assumptions you state, not a real-world guarantee, and it is not yet shown in the Lens.
+- The planner can also re-judge a route under stated measurement error (`assessRoute`: object may be larger, room smaller): a fit that cannot be confirmed reads "too close to confirm". This is a geometric check under the assumptions you state, not a real-world guarantee. The Lens shows it for the workshop bench scenario only (stated error ±5 mm): the corner fits by 4 mm but is too close to confirm, and the double doors hold.
 - The label says "Verified step" only for steps that were checked and "Unverified maneuver" for illustration (including every no-fit attempt).
 
 No SPECS device was available. Everything was run in Interactive Preview with mouse-simulated pinch; hand tracking and comfort on real glasses are unproven.
 
 ## Status
 
-Planner core and Lens experience working. 131 Vitest tests (`npm test`) and 13 LEAF scenarios (the last full run is recorded in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 131 Vitest tests (`npm test`) and 14 LEAF scenarios (the last full run is recorded in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

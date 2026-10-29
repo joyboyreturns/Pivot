@@ -1,5 +1,5 @@
-import { applyFix, boxHandles, frameAt, gateHandles, planRoute, scenarios, suggestFixes, maxScale, rankRoutes } from "./Planner/index";
-import type { Fix, Gate, HandleSpec, Plan, RoutePlan, Scenario } from "./Planner/index";
+import { applyFix, assessRoute, boxHandles, frameAt, gateHandles, planRoute, scenarios, suggestFixes, maxScale, rankRoutes } from "./Planner/index";
+import type { Fix, Gate, HandleSpec, Plan, RouteAssessment, RoutePlan, Scenario, Tolerance } from "./Planner/index";
 import { Handles } from "./PivotHandles";
 import { StageFx } from "./PivotStageFx";
 import { TapInteraction } from "./TapInteraction";
@@ -11,6 +11,10 @@ import type { Tone } from "./PivotGateView";
 import type { TourHost } from "./PivotTour";
 
 const CM = 100;
+/** Measurement error stated for a curated scenario (m): the object may be this much bigger, the room this much smaller. */
+const STATED_ERROR: Record<string, number> = { "workshop-bench": 0.005 };
+const FIT_CUE = requireAsset("../GeneratedSFX/pivot-fit.wav") as AudioTrackAsset;
+const NO_FIT_CUE = requireAsset("../GeneratedSFX/pivot-nofit.wav") as AudioTrackAsset;
 const SCAN_START = 0.5;
 const SCAN_END = 1.6;
 const MAX_CHIPS = 3;
@@ -91,6 +95,9 @@ export class PivotAnalysis extends BaseScriptComponent {
   private table: SceneObject | null = null;
   private switchLabel!: Text3D;
   private scale = 1;
+  private tolerance: Tolerance | null = null;
+  private assessment: RouteAssessment | null = null;
+  private cueAudio: AudioComponent | null = null;
   private tour!: Tour;
   private tourButton!: { object: SceneObject; label: Text3D };
   private captionText = "";
@@ -131,6 +138,8 @@ export class PivotAnalysis extends BaseScriptComponent {
 
   public selectScenario(index: number): void {
     this.scenarioIndex = ((index % scenarios.length) + scenarios.length) % scenarios.length;
+    const stated = STATED_ERROR[scenarios[this.scenarioIndex].id];
+    this.tolerance = stated === undefined ? null : { object: stated, environment: stated };
     this.setScenario(scenarios[this.scenarioIndex], -1, true);
   }
 
@@ -138,6 +147,7 @@ export class PivotAnalysis extends BaseScriptComponent {
   public setScenario(scenario: Scenario, gateIndex: number, scan: boolean): void {
     this.scenario = scenario;
     this.route = planRoute(scenario.box, scenario.gates);
+    this.assessment = this.tolerance ? assessRoute(scenario.box, scenario.gates, this.tolerance) : null;
     this.scale = maxScale(scenario.box, scenario.gates);
     const start = this.route.firstBlockedIndex >= 0 ? this.route.firstBlockedIndex : this.route.bottleneckIndex;
     this.selectGate(gateIndex >= 0 ? gateIndex : Math.max(0, start), false);
@@ -164,6 +174,7 @@ export class PivotAnalysis extends BaseScriptComponent {
 
   /** Reuse the measured route on screen when replacing its object. */
   private swapObject(): void {
+    this.tolerance = null;
     this.sandbox.adopt(this.scenario.boxName, this.scenario.box, this.scenario.gates, this.gateIndex);
     this.sandbox.nextObject();
     this.restartScan(0.9);
@@ -211,9 +222,31 @@ export class PivotAnalysis extends BaseScriptComponent {
   }
 
   private detailTextFor(gate: Gate, plan: Plan): string {
-    if (plan.turn) return wrap(`TIGHTEST ${Math.abs(Math.round(plan.turn.tightestAngle))}° INTO THE TURN${plan.turn.tipped ? " · LAID ON ITS BACK" : ""}`, 28);
-    if (plan.approachNeeded) return wrap(`TURNING SWEEPS ${metres(plan.approachNeeded.depth)} DEEP × ${metres(plan.approachNeeded.height)} HIGH`, 28);
-    return "";
+    const tolerance = this.toleranceDetail();
+    if (plan.turn) return wrap(`TIGHTEST ${Math.abs(Math.round(plan.turn.tightestAngle))}° INTO THE TURN${plan.turn.tipped ? " · LAID ON ITS BACK" : ""}`, 28) + tolerance;
+    if (plan.approachNeeded) return wrap(`TURNING SWEEPS ${metres(plan.approachNeeded.depth)} DEEP × ${metres(plan.approachNeeded.height)} HIGH`, 28) + tolerance;
+    return tolerance.trim();
+  }
+
+  /** "±5 MM": the error stated for this route, when there is one. */
+  private statedError(): string {
+    return this.tolerance ? `±${cm(this.tolerance.object)}` : "";
+  }
+
+  /** The route's tolerance verdict for the summary: what the stated error does to the maneuver as measured. */
+  private toleranceLine(): string {
+    const a = this.assessment;
+    if (!a || (a.status !== "holds" && a.status !== "too-close")) return "";
+    if (a.status === "too-close") return `TOO CLOSE TO CONFIRM AT ${this.statedError()}`;
+    return a.maneuverChecked ? `HOLDS WITH ${this.statedError()} ERROR` : `OPENING HOLDS WITH ${this.statedError()} ERROR`;
+  }
+
+  /** The selected gate's spare room once the stated error is allowed for, under the detail. */
+  private toleranceDetail(): string {
+    const g = this.assessment?.gates[this.gateIndex];
+    if (!g || g.toleranceClearance === null) return "";
+    const left = g.toleranceClearance;
+    return `\nAT ${this.statedError()}: ${cm(Math.abs(left))} ${left < 0 ? "SHORT" : "LEFT"}`;
   }
 
   /** The story slot shows the tour's caption while there is one, else the scenario's story: two lines at most. */
@@ -312,7 +345,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     const verifiedLine = route.fits ? (route.verified ? "EVERY STEP CHECKED" : `${route.unverifiedSteps} STEPS UNVERIFIED`) : "";
     const scale = this.scale;
     const scaleLine = scale >= 1 ? `UP TO ${Math.min(180, Math.floor(scale * 100 + 1e-6))}% OF THIS SIZE CHECKED` : scale > 0 ? `SHRINK TO ${Math.floor(scale * 100 + 1e-6)}% OF THIS SIZE TO FIT` : "NO SIZE FITS THIS ROUTE";
-    this.verdictText.text = [verdictHead, verifiedLine, scaleLine].filter((l) => l).join("\n");
+    this.verdictText.text = [verdictHead, verifiedLine, this.toleranceLine(), scaleLine].filter((l) => l).join("\n");
 
     this.view.show(gate, plan, this.gateTone(plan));
     this.placeStage(gate);
@@ -605,7 +638,19 @@ export class PivotAnalysis extends BaseScriptComponent {
         this.scan.enabled = false;
         this.result.getSceneObject().enabled = true;
         this.finished = true;
+        this.playCue(this.currentPlan.fits && this.assessment?.status !== "too-close");
       }
     });
+  }
+
+  /** A short cue when the result appears: a chime for a fit, a lower tone for no fit or a fit too close to confirm. */
+  private playCue(good: boolean): void {
+    if (!this.cueAudio) {
+      this.cueAudio = this.getSceneObject().createComponent("Component.AudioComponent");
+      this.cueAudio.volume = 0.6;
+    }
+    if (this.cueAudio.isPlaying()) this.cueAudio.stop(true);
+    this.cueAudio.audioTrack = good ? FIT_CUE : NO_FIT_CUE;
+    this.cueAudio.play(1);
   }
 }

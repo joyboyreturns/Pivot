@@ -44,12 +44,12 @@ A pure TypeScript planner (no engine imports, 131 unit tests) and a thin Lens.
 - Gates: doorway, corridor, lift (door and cabin in the same pose), 90 degree L-turn.
 - L-turn: the footprint is swept through every angle of the swing against the inside corner. Pushing toward the outer corner never hurts, which turns the planning problem into one clipped-polygon test per angle; bisection on the hall widths gives the slack. It matches the closed form for equal halls.
 - Approach clearance: single-axis tilts and turns check exact vertex extrema throughout the rotation against the depth and ceiling in front of the gate.
-- Measurement error (planner only, not yet in the Lens): `assessRoute` re-measures the same maneuver on an object enlarged by a stated amount in a room shrunk by a stated amount, so a fit with millimetres to spare can read "too close to confirm". For a fixed pose the enlarged box only grows and the free space only shrinks, so this is conservative; for corners the sampled swing is covered by a stated allowance. It is a geometric check under your assumptions, never a safety guarantee.
+- Measurement error (shown in the Lens for the workshop bench scenario only, stated error ±5 mm: the corner fits by 4 mm but reads "too close to confirm", the double doors hold): `assessRoute` re-measures the same maneuver on an object enlarged by a stated amount in a room shrunk by a stated amount, so a fit with millimetres to spare can read "too close to confirm". For a fixed pose the enlarged box only grows and the free space only shrinks, so this is conservative; for corners the sampled swing is covered by a stated allowance. It is a geometric check under your assumptions, never a safety guarantee.
 - Fixes: bisection on each gate and object dimension for the smallest change that makes a blocked gate pass; the largest uniform scale a route allows.
 - The Lens (Spectacles Interaction Kit, mouse-simulated pinch in the preview) draws everything from the plan. Nothing is authored per scenario.
 
 ## How it was built
-Planned in `devpost/design-brief.md`, built by a coding agent driving Lens Studio through the Lens Studio MCP (scene and asset GraphQL, VirtualScene, runtime scene queries, preview interaction, screenshots, logs) and tested with LEAF: 12 scenarios run in the preview. See `build-notes.md`.
+Planned in `devpost/design-brief.md`, built by a coding agent driving Lens Studio through the Lens Studio MCP (scene and asset GraphQL, VirtualScene, runtime scene queries, preview interaction, screenshots, logs) and tested with LEAF: 14 scenarios run in the preview. See `build-notes.md`.
 
 ## What is real and what is not
 - Logic proven: the planner (131 tests) and the earlier Lens flow. The Lens has 13 LEAF scenarios, all passing in the preview at the last full run (see `../../docs/HANDOFF.md`), including one that plays the whole demo tour in real time and checks every beat.

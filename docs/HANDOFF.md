@@ -163,3 +163,34 @@ Goal from the owner: make every scenario run smoothly and shape the project for 
 - Tall objects at rest (fridge, wardrobe, bookcase, art crate): the hint sits on the pale body and the model reaches the route summary (Session 5, "Open readability problems"). The tour avoids the worst of it but the wardrobe beat shows a 2 m object; not checked by eye.
 - Nothing has run on real glasses; no sound cues; no refreshed screenshots for Devpost. Submission, rules and scope are the owner's decisions.
 - Not a claim that the project is bug-free.
+
+## Session 7 notes (29 October 2026, 19:48-20:30) - uncommitted
+
+### Access and checks
+Lens Studio MCP tools were available (no raw HTTP). `src/planner` and `lens/Assets/Scripts/Planner` are identical (20 files, including `format.ts` and `tolerance.ts`). `npm test` 131/131, `npm run typecheck` clean. The scene and project were not saved; `Assets/Scene.scene` and three `.meta` files were already modified when the session began and were not touched by this work.
+
+### LEAF
+- All 13 existing scenarios PASSED on the code as handed over (20:04-20:11), and again after the change below (20:17-20:24), with 0 CHECK FAILED / FAILED lines. `pivot-tour` took 163.9 s and its MCP call timed out both times; the result was read from the log. No assertion was stale: `pivot-corner-turn` already expected "6 MM TO SPARE" and the bench's "4 MM" is in scenario 10, which only the tour asserts as "MM TO SPARE".
+- New scenario `pivot-tolerance` (14th) PASSED at 20:16 in 27 s. A transient `TS2307` for the new import appeared once, while Lens Studio was importing the new file; the next compile succeeded.
+
+### What was built (owner's goal: complete the plan; narrower option chosen)
+- `PivotAnalysis.ts`: `STATED_ERROR` (workshop bench, 5 mm each way, carry margin 0). When set, `assessRoute` runs in `setScenario`; the summary gains "TOO CLOSE TO CONFIRM AT ±5 MM" or "HOLDS WITH ±5 MM ERROR", and the detail under the selected gate gains "AT ±5 MM: 8 MM SHORT" / "... LEFT". The as-measured verdict is unchanged. The alternative route and handle edits inherit the stated error; swapping the object clears it. No planner change, no sync, no scene change.
+- Real numbers (±5 mm): bench corner 4 mm as measured, 8 mm short with the error (too close to confirm); workshop door 5 cm falls to 4 cm; double doors 16 cm falls to 15 cm (holds). Widening the hall-out by 1 cm is still 3 mm short; by 2 cm it holds with 2 mm left.
+- Cost on Node: `assessRoute` about 9.5 ms against 3.4 ms for `planRoute` on the bench (slowest curated scenario about 9.4 ms). Only scenario 10 and its descendants pay it. Not timed inside Lens Studio.
+
+### Seen in Preview (screenshots)
+Scenario 10 at rest shows the new summary line and the detail line, with the "±" glyph rendering and no overlap with the neighbouring text. The new summary is four lines. Seen before the change: the limiting corner "4 MM", the double doors "FITS · 16 CM TO SPARE", life size with the bench against the 1.30 m double doors. Not re-viewed after the change: the double doors with the new line, and Your move after a hall pull (both covered by `pivot-tolerance` assertions on the text only).
+
+### Sound cues (added after the tolerance work, same session)
+- `lens/Assets/GeneratedSFX/pivot-fit.wav` (1.85 s chime) and `pivot-nofit.wav` (0.45 s tone), generated with the toolkit's `sfx_presets.uiSuccess` / `uiError` (unseeded, so a rerun gives siblings, not the same files). `PivotAnalysis.playCue` creates an `AudioComponent` at run time (scene file unchanged), volume 0.6, and plays one when the result appears. A fit that reads "too close to confirm" plays the lower tone.
+- First attempt threw "Audio player is not enabled" (`stop(true)` before a track was set); fixed by setting the track first and stopping only when playing. After the fix the refresh log has no script errors, and the runtime component holds `pivot-nofit` on the blocked sofa.
+- Not verified: how it sounds (the assistant cannot listen), how it mixes with a voice-over, and device playback. The demo outline still says the video works with the sound off; no recording plan was changed.
+- LEAF was re-run in full on this code (20:26-20:33): all 14 PASSED, 0 CHECK FAILED / FAILED / AudioComponent lines in the log; `pivot-tour` 163 s.
+
+### Devpost images and a wording problem found while taking them
+- `lens/devpost/images/`: `01-blocked-sofa.png`, `02-bench-corner-too-close-at-5mm.png`, `03-double-doors-hold-at-5mm.png`, `04-life-size.png` (1465 x 1590 Preview captures after a refresh, so no LEAF overlay). Seen in them: the "±" glyph renders; in 03 a width handle covers the end of the step label ("SPARE"), the known readability item.
+- Not used: a frame of the sofa fix in Your move (door 85 cm, "FITS · 1 MM TO SPARE"). At the verified step "NOW TURN IT 60 DEGREES, TILT IT 90 DEGREES: 1 MM TO SPARE" both jamb numbers read "0 CM", and the frame is steady, not a transient. `gapText` in `PivotStageFx.ts` clamps a per-side gap of zero or less to "0 CM" while the planner's step clearance is 1 mm, so the two numbers disagree. It predates this session and is not fixed; the cause (clamp of a negative per-side gap, or a different extent used for the jamb numbers) is not confirmed. The tour passes through this fix (beat 1), so it can appear in a recording.
+
+### Still open
+- The demo tour and `demo-outline.md` do not mention the tolerance result (rewrite was not approved; only the scenario count was corrected to 14). The tour does not play the double-doors tolerance line.
+- Everything under "Still open" in Session 6 stands. Nothing has run on real glasses. Nothing is committed or pushed; making the repo public and submitting remain the owner's decisions.

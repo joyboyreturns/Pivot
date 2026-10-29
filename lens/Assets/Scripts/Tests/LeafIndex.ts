@@ -13,6 +13,7 @@ import { PivotYourMoveScenario } from "./PivotYourMoveScenario";
 import { PivotMoveTableScenario } from "./PivotMoveTableScenario";
 import { PivotHandlesScenario } from "./PivotHandlesScenario";
 import { PivotTourScenario } from "./PivotTourScenario";
+import { PivotToleranceScenario } from "./PivotToleranceScenario";
 
 @component
 export class LeafIndex extends BaseScriptComponent {
@@ -31,5 +32,6 @@ export class LeafIndex extends BaseScriptComponent {
     { id: "pivot-move-table", typename: PivotMoveTableScenario.getTypeName() },
     { id: "pivot-handles", typename: PivotHandlesScenario.getTypeName() },
     { id: "pivot-tour", typename: PivotTourScenario.getTypeName() },
+    { id: "pivot-tolerance", typename: PivotToleranceScenario.getTypeName() },
   ];
 }
