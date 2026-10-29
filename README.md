@@ -2,9 +2,9 @@
 
 > Before you lift it, know if it fits.
 
-PIVOT is an AR path planner for SPECS. Most AR furniture apps answer "does it fit in this spot?". PIVOT answers "can it get there?": the whole route, gate by gate, at real scale, with the tightest point marked and every step labelled as checked or unverified.
+PIVOT is an AR path planner for SPECS. Most AR furniture apps answer "does it fit in this spot?". PIVOT answers "can it get there?": a route of gates, each judged on its own, at real scale, with the tightest point marked and every step labelled as checked or unverified. The space between gates is not modelled.
 
-Give it any object's dimensions and any route (doorways, a lift, a low corridor, an L-shaped hallway corner). It shows a short sequence of ghost poses (tip, turn, slide) that get the object through each gate, which gate limits the move, and an honest verdict: clear, tight or blocked.
+Give it a box-shaped object's dimensions and a route of up to three gates (doorways, a lift, a low corridor, an L-shaped hallway corner). It shows a short sequence of ghost poses (tip, turn, slide) that get the object through each gate, which gate limits the move, and an honest verdict: clear, tight or blocked.
 
 Built for the Learn AR with SPECS challenge.
 
@@ -13,10 +13,10 @@ Built for the Learn AR with SPECS challenge.
 - **Route gates.** Doorway, corridor, lift (door and cabin in the same pose) and a 90 degree L-turn. The L-turn sweeps the object's footprint through every angle against the inside corner and finds the narrowest hall it can turn in.
 - **Compare routes.** Gallery deliveries, workshop moves and cargo loads offer a measured alternative route. Pinch **Try another route** to compare it with the same object; pinch again to return. **Swap object** keeps the route while replacing the load.
 - **Route planner.** `planRoute(box, gates)` plans every gate, names the bottleneck, and gives one verdict.
-- **Verified versus unverified.** Tilts and turns are checked against the room in front of the gate (swing depth and ceiling). Where that room was not given, the step is shown as an "Unverified maneuver" and counted.
+- **Verified versus unverified.** Tilts and turns are checked against the room in front of the gate (swing depth and ceiling). Where that room was not given, the step is shown as an "Unverified maneuver" and counted. "Verified" means checked against the box model with the measurements given; it is not a guarantee about the real move, and a "no fit" means no pose was found in the search, not that none exists.
 - **Inverse questions.** The smallest doorway a sofa needs, and a fit matrix of furniture against routes.
 - **What would make it fit.** When a gate blocks, PIVOT says the smallest change that works: widen the opening to 85 cm, give the hall 2.3 m, take 5 cm off the height (legs off), widen both halls. It also says how big the object could be: "this route allows up to 104% of this size".
-- **Any object, any place.** A library of 17 objects and 9 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) can be changed, and routes can have up to three gates of any type.
+- **Many objects, many places.** A library of 17 objects and 9 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) can be changed, and routes can have up to three gates of any type.
 - **Twelve scenarios** with story text: studio flat sofa, the same sofa with a 95 cm door, "the door fits but the hall does not", wardrobe by lift, a tight hallway corner, a queen mattress that cannot ride the lift, a wardrobe down a low corridor, backstage equipment, gallery art crates, a workshop bench, an empty aquarium and a delivery crate.
 
 ## In the Lens (Lens Studio 5.23, Interactive Preview)
@@ -35,13 +35,14 @@ PIVOT is designed to the SPECS design habits, not as a screen in the air:
 - After the analysis scan the ghost plays the maneuver by itself; pinch the **arrow** to step it or drag the **rail** to scrub, and your first touch takes over.
 - Labels turn to face you, so you can walk round the gate and still read them.
 - The doorway, lift cabin, corridor or L-shaped hall is drawn at real size (cm). A red, amber or green marker sits at the tightest point; a floor line shows where the room in front of the gate ends.
+- The planner can also re-judge a route under stated measurement error (`assessRoute`: object may be larger, room smaller): a fit that cannot be confirmed reads "too close to confirm". This is a geometric check under the assumptions you state, not a real-world guarantee, and it is not yet shown in the Lens.
 - The label says "Verified step" only for steps that were checked and "Unverified maneuver" for illustration (including every no-fit attempt).
 
 No SPECS device was available. Everything was run in Interactive Preview with mouse-simulated pinch; hand tracking and comfort on real glasses are unproven.
 
 ## Status
 
-Planner core and Lens experience working. 107 Vitest tests (`npm test`) and 12 LEAF scenarios (current revision rerun status in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 131 Vitest tests (`npm test`) and 13 LEAF scenarios (the last full run is recorded in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

@@ -97,12 +97,29 @@ function angleSlack(fp: Footprint, deg: number, a: number, b: number): number {
   return lo;
 }
 
-export function solveCorner(input: Footprint, a: number, b: number, stepDeg = 1): CornerSolution {
+/**
+ * Most the sampled slack can differ from the true slack between two samples `stepDeg` apart.
+ * Slack as a function of the swing angle is Lipschitz: turning by d radians moves each vertex of the
+ * pushed rectangle by at most r*d (r = half the diagonal) and its centre by at most sqrt(2)*r*d, and
+ * moving the rectangle by e away from the inside corner buys at least e of slack, so the constant is
+ * (1 + sqrt(2)) * r. The nearest sample is within half a step; the bisection adds a negligible 1e-6.
+ */
+export function cornerSamplingAllowance(fp: Footprint, stepDeg: number): number {
+  const r = Math.hypot(fp.length, fp.depth) / 2;
+  return (1 + Math.SQRT2) * r * rad(stepDeg / 2) + 1e-6;
+}
+
+/**
+ * Tightest slack over the swing. Angles are sampled every `stepDeg` and refined around the worst one,
+ * so the answer is a sampled one: see `cornerSamplingAllowance` for how far the true slack may be below it.
+ * `directions` limits which swing directions are tried (default both).
+ */
+export function solveCorner(input: Footprint, a: number, b: number, stepDeg = 1, directions: readonly (1 | -1)[] = [-1, 1]): CornerSolution {
   // The object enters hall A and leaves hall B lengthwise; its short side must fit each hall.
   const fp = input.length >= input.depth ? input : { length: input.depth, depth: input.length };
   const entry = Math.min(a, b) - fp.depth;
   let best: CornerSolution = { slack: -Infinity, tightestAngle: 0, direction: -1 };
-  for (const direction of [-1, 1] as const) {
+  for (const direction of directions) {
     let worst = Infinity;
     let worstAngle = 0;
     for (let deg = 0; deg <= 90 + 1e-9; deg += stepDeg) {

@@ -20,3 +20,6 @@ export { rankRoutes, recommendRoute } from "./choices";
 export type { RouteChoice, RankedRoute } from "./choices";
 export { boxHandles, gateHandles, applyHandle, PROPOSED_HALL } from "./handles";
 export type { HandleSpec } from "./handles";
+export { lengthText } from "./format";
+export { assessRoute } from "./tolerance";
+export type { Tolerance, ToleranceStatus, GateAssessment, RouteAssessment, AssessOptions } from "./tolerance";

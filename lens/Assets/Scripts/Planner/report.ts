@@ -1,3 +1,4 @@
+import { lengthText } from "./format";
 import { suggestFixes, maxScale } from "./fixes";
 import type { FitRow } from "./inverse";
 import type { Scenario } from "./scenarios";
@@ -5,7 +6,7 @@ import { planRoute } from "./route";
 import type { Gate, Plan, RoutePlan } from "./types";
 
 const m = (v: number) => `${v.toFixed(2)} m`;
-const cm = (v: number) => `${(v * 100).toFixed(0)} cm`;
+const cm = lengthText;
 const signed = (v: number) => `${v >= 0 ? "+" : "-"}${cm(Math.abs(v))}`;
 
 export function describeGate(gate: Gate): string {

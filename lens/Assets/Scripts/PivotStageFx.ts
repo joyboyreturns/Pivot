@@ -116,7 +116,8 @@ export class StageFx {
       const z = 9;
       const cap = 14;
       const th = 3;
-      const gapText = (m: number) => `${(Math.max(0, m) * 100).toFixed(1).replace(".0", "")} CM`;
+      // Whole millimetres under a centimetre, so a real gap never reads "0 CM"; one decimal of a centimetre above that.
+      const gapText = (m: number) => (m < 0.01 ? lengthText(Math.max(0, m)) : `${(m * 100).toFixed(1).replace(".0", "")} CM`);
       let n = 0;
       for (const side of [-1, 1]) {
         if (sideGap > 0.25) continue;

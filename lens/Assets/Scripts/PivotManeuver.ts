@@ -122,7 +122,8 @@ export class PivotManeuver extends BaseScriptComponent {
 
   private warningText(plan: Plan, step: number): string {
     if (!plan.fits) return "UNVERIFIED MANEUVER\nILLUSTRATION ONLY · IT DOES NOT FIT";
-    if (this.target < 0.005 && this.progress < 0.005) return (plan.verified ? "EVERY STEP CHECKED" : "UNVERIFIED MANEUVER") + "\n" + HINT;
+    // The tour works by itself, so the pinch hint would only sit on the object (the headline already says every step is checked).
+    if (this.target < 0.005 && this.progress < 0.005) return this.analysis.touring ? "" : (plan.verified ? "EVERY STEP CHECKED" : "UNVERIFIED MANEUVER") + "\n" + HINT;
     const s = plan.steps[step];
     const head = s.verified ? "VERIFIED STEP" : "UNVERIFIED MANEUVER";
     const hint = s.hint.toUpperCase();

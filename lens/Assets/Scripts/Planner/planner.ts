@@ -1,6 +1,7 @@
 import { cornerCentre, solveCorner } from "./corner";
 import { gateClearance, isPoseGate, rotationChain, sweepChain, sweepSegment } from "./gates";
 import type { PoseGate } from "./gates";
+import { lengthText } from "./format";
 import { validateInput } from "./validation";
 import { extents } from "./geometry";
 import type {
@@ -26,7 +27,7 @@ export const PASS_Z = -0.55;
 
 const effort = (p: Pose) => p.pitch + p.yaw + p.roll;
 const at = (z: number): Vec3 => ({ x: 0, y: 0, z });
-const centimetres = (m: number) => `${(m * 100).toFixed(0)} cm`;
+const centimetres = lengthText;
 
 interface Eval {
   gate: number;
@@ -39,7 +40,7 @@ interface Choice extends Eval {
   pose: Pose;
 }
 
-function resolveApproach(gate: Gate, options: PlanOptions): Approach | null {
+export function resolveApproach(gate: Gate, options: PlanOptions): Approach | null {
   if (options.approach === null) return null;
   if (options.approach) return options.approach;
   return gate.kind === "corner" ? null : (gate.approach ?? null);

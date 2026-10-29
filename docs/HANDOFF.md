@@ -136,4 +136,30 @@ Lens Studio MCP tools were available (`run_leaf_scenario`, `PreviewInteractTool`
 - Nothing has run on real glasses. Preview with simulated pinch only; no sound cues, demo video or refreshed screenshots.
 - Not viewed at rest: flight case, wardrobe, washing machine, bookcase and other presets beyond the bench, fridge, crate and sofa. Life-size view with the new models. Fix 5 on an L-turn.
 - The model checks gate cross-sections and sampled corner sweeps (Next actions item 4 above); this is not a claim that the project is bug-free.
-- Nothing is committed or pushed (last push c8677f9). Working-tree changes: HANDOFF.md, PivotAnalysis.ts, PivotLayout.ts, PivotManeuver.ts, PivotStageFx.ts, Tests/PivotCornerScenario.ts.
+- Session 5's changes were committed and pushed as 9a9f347 (c8677f9..9a9f347 on main), on the owner's request.
+
+## Session 6 notes (28 October 2026, 18:00-18:40) - uncommitted
+
+Goal from the owner: make every scenario run smoothly and shape the project for a three-minute demo video.
+
+### What was built
+- **Tour** (`lens/Assets/Scripts/PivotTour.ts`, wired in `PivotAnalysis`). A hands-free, 156 s walk through the story: 15 timed beats that call what a hand could call (show scenario, pinch the first fix, try another route, swap object, life size, pull a door edge 80 to 100 cm), with a caption in the story slot under the title. The TOUR button is a runtime copy of the Life size button (`copyWholeHierarchy`), so `Scene.scene` is unchanged. It lives in the left column's free row 5 and hides in Your move. Any change to what is on screen that the tour did not make (a pinch on any control, a drag) stops it, and the caption goes. `AUTO_TOUR` (default `false`) starts it two seconds after launch for a recording with no mouse click.
+- While the tour runs, the at-rest "PINCH ARROW • PULL AN EDGE" hint is left empty (it sat on the model and is wrong for a hands-free run).
+- The caption in life size uses the same depth and scale as the other life-size labels (it was 2.7 times too big and mid-screen).
+- Dimension numbers under 1 cm now read in millimetres at the jambs too (an 85 cm door for the 85 cm sofa showed "0 CM" each side; it is 1 mm).
+- New LEAF scenario `pivot-tour` runs the whole tour in real time, checks every beat inside its time window, that the tour ends by itself and keeps to its script, and that a pinch on a control stops it and clears the caption.
+- `lens/devpost/demo-outline.md` rewritten as a timecoded script that matches the beats, with a voice-over line for each, recording steps, the build-story segment and a fallback. `pitch.md`, `README.md` and `ARCHITECTURE.md` updated (13 LEAF scenarios; 6 mm corner; the tour).
+
+### Verified (Preview, MCP tools only)
+- Final run on this code, 18:20-18:40: all 13 LEAF scenarios PASSED (scene, analysis-and-step, scrub, scenario-switch, gate-chips, verified-vs-unverified, corner-turn, box-and-lift, autoplay, your-move, move-table, handles, tour), 0 FAILED / CHECK FAILED in the log, no Widget aborts in this window. `pivot-tour` took 165 s. `npm test` 107/107, `npm run typecheck` exit 0, `npm run sync` no change under the planner.
+- Screenshots of the tour at: the opening (caption, STOP TOUR button), the fix result (width 85, "FITS · 1 MM"), the corner (6 MM), life size (after the caption fix), the gallery crate blocked, and the end of the door pull (width 100, "FITS · 10 CM"). The narrow hall, wardrobe lift, alternative route, bench, flight case, aquarium and swap beats are covered by the `pivot-tour` assertions but I did not look at a screenshot of each.
+
+### Notes for whoever records
+- `PreviewInteractTool` can address the Tour button by `name: "Tour target"`; its unique id changes on every lens reset because the object is created at run time.
+- The MCP `run_leaf_scenario` call times out on scenarios longer than about 30 s while the scenario keeps running; read the result from the log. Runs are slower now (box-and-lift 57 s, your-move 47 s) than at the first pass (32 s, 24 s); the machine was busy, no product change explains it.
+- The take has not been recorded and no voice-over exists; that is the owner's to do. Do not exceed 3:00.
+
+### Still open
+- Tall objects at rest (fridge, wardrobe, bookcase, art crate): the hint sits on the pale body and the model reaches the route summary (Session 5, "Open readability problems"). The tour avoids the worst of it but the wardrobe beat shows a 2 m object; not checked by eye.
+- Nothing has run on real glasses; no sound cues; no refreshed screenshots for Devpost. Submission, rules and scope are the owner's decisions.
+- Not a claim that the project is bug-free.

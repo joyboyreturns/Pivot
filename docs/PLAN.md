@@ -48,6 +48,15 @@ Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.c
 - [x] Fix tags you can pinch to try the fix
 - [x] Controls cut to a few large targets; placement numbers in one file and tested
 
+## Step 3d: Measurement error and honest wording (29 Oct, owner approved scope A)
+
+- [x] `lengthText`: a positive margin under 1 cm reads in millimetres in the route summary, step hints and text report (was "0 cm")
+- [x] `assessRoute`: conservative re-measure of the nominal maneuver under stated object and room error, separate carry margin, 19 tests with hand-worked fixtures
+- [x] Corner sampling bound (`cornerSamplingAllowance`) and a swing-direction option in `solveCorner`
+- [x] Docs and pitch: "any object, any place" and "exact L-turn" wording qualified; gates judged independently; "verified" defined
+- [ ] One Lens scenario that shows the tolerance result (needs Lens Studio access; not built)
+- [ ] Re-run all LEAF scenarios after `npm run sync` (planner text changed; not run)
+
 ## Step 4: Polish (4-6 Nov)
 
 - [x] Walk-around check with the preview camera (orbit), L-turn framing, text stack, switch size, long titles

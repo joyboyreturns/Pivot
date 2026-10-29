@@ -1,7 +1,8 @@
+import { lengthText } from "./format";
 import { planGate } from "./planner";
 import type { Box, Gate, GatePlan, RouteOptions, RoutePlan, Verdict } from "./types";
 
-const cm = (m: number) => `${(Math.abs(m) * 100).toFixed(0)} cm`;
+const cm = lengthText;
 
 /**
  * Plan a whole route: every gate in order, the gate that limits the move, and one verdict.

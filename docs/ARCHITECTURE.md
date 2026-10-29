@@ -59,13 +59,19 @@ Every `PlanStep` has `verified`:
 
 Plan view: hall A (width a) runs east-west, hall B (width b) north-south, outer walls at y = a and x = b, inside corner at the origin, solid quadrant Q = {x < 0, y < 0}. The footprint rectangle rotates through 90 degrees.
 
-Q is closed downward, so pushing any feasible rectangle toward the outer corner keeps it feasible. For every angle the best position therefore touches both outer walls, and a path exists exactly when that pushed rectangle clears Q at every angle (polygon clipping, positive overlap area counts). Slack is found by bisection on shrinking both widths together. Both swing directions are tried. With equal halls and a 45 degree tightest angle the answer matches the closed form `w = (L/2 + D) / sqrt(2)` (tested).
+Q is closed downward, so pushing any feasible rectangle toward the outer corner keeps it feasible. For every angle the best position therefore touches both outer walls, and a path exists exactly when that pushed rectangle clears Q at every angle (polygon clipping, positive overlap area counts). Slack is found by bisection on shrinking both widths together. Both swing directions are tried. The swing angle is sampled (1 degree, then refined at 0.1 degree around the tightest sample), so the slack is a sampled value, not a continuous exact solution; `cornerSamplingAllowance` gives a proven bound (Lipschitz in the angle) on how far the true slack can be below a sampled one. With equal halls and a 45 degree tightest angle the answer matches the closed form `w = (L/2 + D) / sqrt(2)` (tested).
 
 The solver also tries laying the object on its back (depth vertical) when upright is not comfortable, and takes the ceiling into account. The plan carries a `turn` with everything needed to place the object at any angle, so the Lens animates the exact path.
 
 ### Route planner
 
-`planRoute(box, gates)` plans each gate, the bottleneck (least slack; for a blocked route the worst blocker), the first blocked gate and a verdict: `blocked`, `tight` (< 3 cm) or `clear`. It also counts unverified steps.
+`planRoute(box, gates)` plans each gate, the bottleneck (least slack; for a blocked route the worst blocker), the first blocked gate and a verdict: `blocked`, `tight` (< 3 cm) or `clear`. It also counts unverified steps. Each gate is planned independently: passing every gate does not show that the object can be carried between them, and the space between gates is not modelled. A failed pose search means no pose was found within the search resolution, not that none exists.
+
+### Measurement error
+
+`assessRoute(box, gates, { object, environment }, { carryMargin })` (`tolerance.ts`) re-judges the nominal route's maneuver under stated bounds: every object dimension may be up to `object` larger and every stated room dimension (openings, cabin, halls, ceiling, approach depth and height) up to `environment` smaller. The carry margin is a separate number and is never mixed into either. The nominal plan is not changed.
+
+Why this is conservative: for a fixed pose (or fixed lay-down and swing direction), a larger box contains the smaller one in the same pose and a shrunk free region is a subset of the real one, so a maneuver that clears the enlarged box in the shrunk room clears every size within the bounds. It re-measures the same maneuver and does not search again, so `too-close` means that maneuver cannot be confirmed, not that no maneuver could be (search ranking is not assumed monotone). Rectangular gates and single-axis sweeps are exact up to floating point; corners add `cornerSamplingAllowance` for angle sampling. A gate that does not fit as measured is `does-not-fit` and is not tolerance-assessed. A missing approach measurement stays unmeasured: `maneuverChecked` is false and the summary says only the opening was judged. The bounds are assumptions, not probabilities or sensor confidence. Gates are still judged independently. It is not yet shown in the Lens.
 
 ### Inverse queries
 
@@ -95,6 +101,7 @@ From the SPECS design material the hackathon is built on: not a website floating
 | `PivotAnalysis` | Holds the scenario and selected gate, runs `planRoute`, writes the labels (title, story, route verdict, result, detail), keeps gate chips, restarts the brief scan on each change. Pinch Next scenario cycles. |
 | `PivotHandles` | Draws the handles from the planner's specs, uses the Interactable and InteractableManipulation of the Spectacles Interaction Kit, turns hand movement into a distance along the handle's axis (throttled to 20 Hz), and snaps each handle back onto its edge. |
 | `PivotSandbox` | *Your move*: object and place pickers, add and remove gates, a stepper row for every parameter of the selected object or gate. It only edits an object and a list of gates and hands the result to `PivotAnalysis`. |
+| `PivotTour` | A hands-free walk through the story for the three-minute demo: fifteen timed beats that call what a hand could call (show a scenario, pinch the fix, try the other route, swap the load, life size, pull a door edge), with a caption under the title. A plain class like `PivotSandbox`; its TOUR button is a runtime copy of the Life size button, so the scene file is unchanged. It stops when anything else changes what is on screen, so any pinch hands the Lens back. `AUTO_TOUR` starts it by itself for a clean recording. |
 | `PivotGateView` | Pool of box panels built at runtime from the gate: doorway frame, corridor walls, lift cabin, cutaway L-hall, floor line for the approach limit, a tone-coloured bottleneck marker. |
 | `PivotManeuver` | Ghost playback from `frameAt`; the object rotates about the middle of its volume and rests on the floor. Sofa mesh for sofas, a real-size box with details (wardrobe doors, mattress quilting) otherwise. Replays the maneuver by itself after each analysis (`autoPlay`); the first pinch or drag takes over. Arrow steps, rail scrubs, label says verified step or Unverified maneuver. |
 | Labels | Billboarded about the vertical toward the wearer's head so they read from any side. |
@@ -104,8 +111,8 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (107 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
-- LEAF (12 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, dragging handles (door, hall, object, L-turn), the move table (controls and labels inside the field of view, model scale, callouts, trail, life size).
+- Vitest (131 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- LEAF (13 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, dragging handles (door, hall, object, L-turn), the move table (controls and labels inside the field of view, model scale, callouts, trail, life size), and the tour (runs the whole three-minute tour in real time and checks every beat, then checks that a pinch on any control stops it).
 
 ## Not modelled (cut first)
 

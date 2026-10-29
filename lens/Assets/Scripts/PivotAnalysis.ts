@@ -5,8 +5,10 @@ import { StageFx } from "./PivotStageFx";
 import { TapInteraction } from "./TapInteraction";
 import { GateView, TONES, toneFor } from "./PivotGateView";
 import { Sandbox, wireButton } from "./PivotSandbox";
-import { ARROW_AT, MODEL_SCALE, RAIL_AT, RAIL_HALF, SIZES, TABLE_TOP, TABLE_Z, W, lengthText, textWidth, tokenAt, tokenLabelAt } from "./PivotLayout";
+import { ARROW_AT, LEFT_X, MODEL_SCALE, RAIL_AT, RAIL_HALF, SIZES, TABLE_TOP, TABLE_Z, W, leftColumn, lengthText, textWidth, tokenAt, tokenLabelAt } from "./PivotLayout";
+import { AUTO_TOUR, Tour } from "./PivotTour";
 import type { Tone } from "./PivotGateView";
+import type { TourHost } from "./PivotTour";
 
 const CM = 100;
 const SCAN_START = 0.5;
@@ -89,6 +91,12 @@ export class PivotAnalysis extends BaseScriptComponent {
   private table: SceneObject | null = null;
   private switchLabel!: Text3D;
   private scale = 1;
+  private tour!: Tour;
+  private tourButton!: { object: SceneObject; label: Text3D };
+  private captionText = "";
+  private captionUntil = 0;
+  private shownStory = "";
+  private autoToured = false;
 
   public scenarioIndex = 0;
   public gateIndex = 0;
@@ -208,6 +216,74 @@ export class PivotAnalysis extends BaseScriptComponent {
     return "";
   }
 
+  /** The story slot shows the tour's caption while there is one, else the scenario's story: two lines at most. */
+  private showStory(): void {
+    const captioned = getTime() < this.captionUntil && this.captionText !== "";
+    const lines = wrap(captioned ? this.captionText : this.scenario.story, 44).split("\n");
+    const text = lines.slice(0, 2).join("\n") + (lines.length > 2 ? "…" : "");
+    if (text !== this.shownStory) {
+      this.shownStory = text;
+      this.storyText.text = text;
+    }
+  }
+
+  /** Put `text` under the title for `seconds` (the tour's narration); an empty text gives the story back. */
+  public caption(text: string, seconds: number): void {
+    this.captionText = text;
+    this.captionUntil = getTime() + seconds;
+    if (this.storyText) this.showStory();
+  }
+
+  private setLifeSize(on: boolean): void {
+    if (this.lifeSize === on) return;
+    this.lifeSize = on;
+    this.sizeLabel.text = on ? "MODEL SIZE" : "LIFE SIZE";
+    this.refresh();
+  }
+
+  /** The TOUR button is a copy of the Life size button made here, so the scene file stays as it is. */
+  private initTour(): void {
+    const copy = (source: string, name: string) => {
+      this.root.copyWholeHierarchy(this.find(source)).name = name;
+    };
+    copy("Size target", "Tour target");
+    copy("Size label", "Tour label");
+    const button = wireButton(this.find.bind(this), this.text.bind(this), "Tour target", "Tour label", "TOUR ›", () => (this.tour.running ? this.tour.stop() : this.tour.start()));
+    this.tourButton = { object: button.object, label: button.label };
+    const host: TourHost = {
+      show: (id) => {
+        const index = scenarios.findIndex((s) => s.id === id);
+        if (index < 0) return;
+        if (this.sandbox.active) this.sandbox.exit();
+        this.selectScenario(index);
+      },
+      tryFix: () => this.tryFix(0),
+      tryAlternative: () => this.tryAlternative(),
+      swapObject: () => this.swapObject(),
+      setLifeSize: (on) => this.setLifeSize(on),
+      drag: (key, x, y, z) => { this.dragHandle(key, new vec3(x, y, z)); },
+      caption: (text, seconds) => this.caption(text, seconds),
+      signature: () => `${this.revision}|${this.lifeSize}|${this.sandbox.active}`,
+    };
+    this.tour = new Tour(host, (running) => {
+      this.tourButton.label.text = running ? "STOP TOUR ■" : "TOUR ›";
+      this.layout();
+    });
+  }
+
+  /** True while the tour is driving the Lens. */
+  public get touring(): boolean {
+    return this.tour.running;
+  }
+
+  public startTour(): void {
+    this.tour.start();
+  }
+
+  public stopTour(): void {
+    this.tour.stop();
+  }
+
   /** Pinch a fix tag: apply that change and carry on in your-move mode to see it work and keep editing. */
   private tryFix(index: number): void {
     const fix = this.fixes[index];
@@ -225,8 +301,7 @@ export class PivotAnalysis extends BaseScriptComponent {
     const plan = this.currentPlan;
 
     this.titleText.text = this.sandbox.active ? `YOUR MOVE · ${s.boxName.replace(/ \d+ x \d+ x \d+ cm$/, "").toUpperCase()}` : `${this.scenarioIndex + 1}/${scenarios.length}  ${s.title.toUpperCase()}`;
-    const story = wrap(s.story, 44).split("\n");
-    this.storyText.text = story.slice(0, 2).join("\n") + (story.length > 2 ? "…" : "");
+    this.showStory();
     const limiting = route.gates[route.bottleneckIndex];
     const verdictHead =
       route.verdict === "blocked"
@@ -340,6 +415,8 @@ export class PivotAnalysis extends BaseScriptComponent {
       put("Scenario Title", 0, 96, -300);
       put("Route Verdict Label", 0, 82, -300);
       put("PIVOT No-fit Label", 0, corner ? 60 : 60, -300);
+      // The story (and the tour's caption) takes the same depth and scale as the rest, just under the headline.
+      put("Scenario Story", 0, 46, -300);
     } else {
       put("Scenario Title", 0, 22);
       put("Scenario Story", 0, 17.5);
@@ -356,6 +433,12 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.find(`Fix tag ${i + 1}`).getTransform().setLocalPosition(W(15, y, -108));
       this.find(`Fix tag label ${i + 1}`).getTransform().setLocalPosition(W(18.5 + textWidth(this.fixTags[i].label.text, SIZES.tag) / 2, y, -108));
     }
+    // The tour starts from the free row under the scenario controls; Your move uses that row for + GATE.
+    const tourRow = leftColumn(5);
+    this.tourButton.object.enabled = !this.sandbox.active;
+    this.tourButton.label.getSceneObject().enabled = !this.sandbox.active;
+    put("Tour target", LEFT_X, tourRow, -108);
+    put("Tour label", LEFT_X + 3 + textWidth(this.tourButton.label.text, SIZES.button) / 2, tourRow, -108);
     const rail = this.find("Timeline rail").getTransform();
     rail.setLocalPosition(RAIL_AT());
     rail.setLocalScale(new vec3(RAIL_HALF * 2, 0.5, 0.5));
@@ -454,12 +537,9 @@ export class PivotAnalysis extends BaseScriptComponent {
         wired.label.size = SIZES.tag;
         this.fixTags.push({ object: wired.object, label: wired.label, hideAt: 0 });
       }
-      const size = wireButton(this.find.bind(this), this.text.bind(this), "Size target", "Size label", "LIFE SIZE", () => {
-        this.lifeSize = !this.lifeSize;
-        this.sizeLabel.text = this.lifeSize ? "MODEL SIZE" : "LIFE SIZE";
-        this.refresh();
-      });
+      const size = wireButton(this.find.bind(this), this.text.bind(this), "Size target", "Size label", "LIFE SIZE", () => this.setLifeSize(!this.lifeSize));
       this.sizeLabel = size.label;
+      this.initTour();
       this.table = global.scene.createSceneObject("Move table");
       this.table.setParent(this.root);
       const slab = this.table.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
@@ -472,7 +552,7 @@ export class PivotAnalysis extends BaseScriptComponent {
       this.result.getSceneObject().enabled = false;
       this.scan.enabled = false;
       // Labels turn about the vertical to face the wearer, so they stay readable while walking round the gate.
-      const names = ["Callout label 1", "Callout label 2", "Callout label 3", "Handle label", "Fix tag label 1", "Fix tag label 2", "Size label", "Mode label", "Object label", "Gate add label", "Gate remove label", "Object chip label", "Param label 1", "Param label 2", "Param label 3", "Param label 4", "Param label 5", "Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
+      const names = ["Callout label 1", "Callout label 2", "Callout label 3", "Handle label", "Fix tag label 1", "Fix tag label 2", "Size label", "Mode label", "Object label", "Gate add label", "Gate remove label", "Object chip label", "Param label 1", "Param label 2", "Param label 3", "Param label 4", "Param label 5", "Scenario Title", "Scenario Story", "Route Verdict Label", "PIVOT No-fit Label", "Gate Detail Label", "Unverified Maneuver Label", "Doorway Dimensions", "Sofa Dimensions", "Scenario switch label", "Tour label", "Gate chip label 1", "Gate chip label 2", "Gate chip label 3"];
       this.billboards = names.map((n) => this.find(n));
       for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
         const o = global.scene.getRootObject(i);
@@ -490,7 +570,13 @@ export class PivotAnalysis extends BaseScriptComponent {
 
     this.createEvent("UpdateEvent").bind(() => {
       if (!this.storyText || !this.currentPlan) return;
-      this.storyText.getSceneObject().enabled = getTime() < this.storyUntil;
+      this.storyText.getSceneObject().enabled = getTime() < Math.max(this.storyUntil, this.captionUntil);
+      this.showStory();
+      if (AUTO_TOUR && !this.autoToured && getTime() > 2) {
+        this.autoToured = true;
+        this.tour.start();
+      }
+      this.tour.update(getDeltaTime());
       for (const tag of this.fixTags) {
         if (tag.hideAt > 0 && getTime() > tag.hideAt) {
           tag.object.enabled = false;
