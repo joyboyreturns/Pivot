@@ -17,7 +17,7 @@ A caption on screen carries each beat, so the video also works with the sound of
 | Time | On screen (the tour does this) | Say |
 |---|---|---|
 | 0:00 | Studio flat, the sofa, **Does not fit · 5 cm short**. The ghost tries the door and jams (coral). | "Every AR furniture app asks: does it fit here? Moving day asks something harder: can it get there? PIVOT checks the whole move, not just the doorway. This sofa is five centimetres too big for this door." |
-| 0:15 | The tour pinches the suggested fix, **widen to 85**. Re-plans live: **Fits · 1 mm to spare**, **Verified step**. | "Pinch a suggested fix: widen the door to 85. PIVOT re-plans the whole route live, and now it fits, by a millimetre. Every step of the turn is checked." |
+| 0:15 | The tour pinches the suggested fix, **widen to 85**. Re-plans live: **Fits · 0 cm to spare**, **Verified step**. | "Pinch a suggested fix: widen the door to 85. PIVOT re-plans the whole route live, and now it fits, with nothing to spare: the sofa stands 85 centimetres tall on its side and the door is exactly that wide. Every step of the turn is checked." |
 | 0:29 | "Door fits, hall doesn't": **No room to turn**. | "Here the door is fine but the hall isn't. Turning the sofa sweeps two point three metres and the hall is only one point two. A doorway-only check would have said yes." |
 | 0:42 | Tight hallway corner: the L-shaped plan, the sofa laid on its back swinging round, **6 mm to spare**. | "Corners too. PIVOT sweeps the footprint round the corner a degree at a time, so the sofa goes round laid on its back, with six millimetres to spare." |
 | 0:56 | **Life size**: the same plan at real size. | "Pinch Life size and you stand at the corner: the same plan at real size." |

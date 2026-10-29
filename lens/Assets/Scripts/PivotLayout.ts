@@ -4,6 +4,8 @@
  * about 1.1 m ahead and a little below eye level, inside roughly +-38 cm sideways and +-26 cm up and down.
  * Numbers are centimetres in world space; `W` converts to the local space of the PIVOT Scene root.
  */
+import { lengthText as plannerLengthText } from "./Planner/index";
+
 export const ROOT = new vec3(0, -150, -500);
 export const W = (x: number, y: number, z: number): vec3 => new vec3(x - ROOT.x, y - ROOT.y, z - ROOT.z);
 
@@ -28,12 +30,8 @@ export const textWidth = (text: string, size: number): number => {
   return longest * size * 0.0155;
 };
 
-/** A gap or margin as text: whole centimetres, but millimetres under 1 cm so a real 4 mm margin never reads "0 CM". */
-export const lengthText = (m: number): string => {
-  const d = Math.abs(m);
-  if (d > 0 && d < 0.01) return `${Math.max(1, Math.round(d * 1000))} MM`;
-  return `${Math.round(d * 100)} CM`;
-};
+/** A gap or margin as text, in capitals for the display: the planner's wording (millimetres under 1 cm, noise reads as zero). */
+export const lengthText = (m: number): string => plannerLengthText(m).toUpperCase();
 
 export const RAIL_HALF = 16;
 

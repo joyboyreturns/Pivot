@@ -16,6 +16,22 @@ describe("lengthText", () => {
   it("keeps an exact zero as 0 cm", () => {
     expect(lengthText(0)).toBe("0 cm");
   });
+  it("reads floating-point noise as zero, not as 1 mm", () => {
+    expect(lengthText(-1.1102230246251565e-16)).toBe("0 cm");
+    expect(lengthText(1e-12)).toBe("0 cm");
+    expect(lengthText(0.000001)).toBe("1 mm");
+  });
+});
+
+describe("a sofa as tall as the door is wide", () => {
+  it("fits with nothing to spare and says so, not '1 mm'", () => {
+    const sofa = scenarios[0]!;
+    const door: Gate = { kind: "doorway", name: "Flat door", width: 0.85, height: 2.05, approach: { depth: 2.4, height: 2.5 } };
+    const plan = planGate(sofa.box, door, { approach: door.approach });
+    expect(plan.fits).toBe(true);
+    expect(Math.abs(plan.clearance)).toBeLessThan(1e-9);
+    expect(lengthText(plan.clearance)).toBe("0 cm");
+  });
 });
 
 describe("clearance wording in every planner surface", () => {
