@@ -38,20 +38,22 @@ export class PivotTourScenario extends Scenario {
     const summary = () => `${title()} | ${result()} | ${textOf("Scenario Story")}`;
 
     await beat(0, "the blocked sofa is captioned", () => has(textOf("Scenario Story"), "Can it get there") && has(result(), "DOES NOT FIT"), summary);
-    await beat(1, "the fix is pinched and the door goes to 85", () => has(title(), "YOUR MOVE") && has(textOf("Param label 1"), "WIDTH 85") && has(result(), "FITS"), summary);
+    await beat(1, "the fix is pinched and the door goes to 86", () => has(title(), "YOUR MOVE") && has(textOf("Param label 1"), "WIDTH 86") && has(result(), "FITS · 1 CM"), summary);
     await beat(2, "the door fits but the hall has no room to turn", () => has(title(), "3/12") && has(result(), "NO ROOM TO TURN"), summary);
     await beat(3, "the hallway corner fits", () => has(title(), "5/12") && has(result(), "FITS"), summary);
     await beat(4, "life size is on", () => has(textOf("Size label"), "MODEL SIZE"), summary);
     await beat(5, "back at model size, the wardrobe goes by lift", () => has(title(), "4/12") && has(textOf("Size label"), "LIFE SIZE") && has(result(), "FITS"), summary);
     await beat(6, "the gallery crate is blocked at the side entrance", () => has(title(), "9/12") && has(result(), "DOES NOT FIT"), summary);
     await beat(7, "the other route lets it through", () => has(title(), "GALLERY LOADING") && has(result(), "FITS"), summary);
-    await beat(8, "the bench fits by millimetres", () => has(title(), "10/12") && has(result(), "MM TO SPARE"), summary);
-    await beat(9, "the flight case", () => has(title(), "8/12") && has(result(), "FITS"), summary);
-    await beat(10, "the aquarium", () => has(title(), "11/12") && has(result(), "FITS"), summary);
-    await beat(11, "the load is swapped on the same route", () => has(title(), "YOUR MOVE") && !has(title(), "AQUARIUM"), summary);
-    await beat(12, "back to the studio sofa", () => has(title(), "1/12") && has(result(), "DOES NOT FIT"), summary);
-    await beat(13, "the door edge is pulled out and the sofa goes through", () => has(title(), "YOUR MOVE") && has(textOf("Param label 1"), "WIDTH 100") && has(result(), "FITS"), () => `${summary()} | ${textOf("Param label 1")}`);
-    await beat(14, "the closing line over the widened door", () => has(title(), "2/12") && has(textOf("Scenario Story"), "before you lift it"), summary);
+    const verdict = () => textOf("Route Verdict Label");
+    await beat(8, "the bench fits by millimetres but is too close to confirm at the stated error", () => has(title(), "10/12") && has(result(), "MM TO SPARE") && has(verdict(), "TOO CLOSE TO CONFIRM AT ±5 MM"), () => `${summary()} | ${verdict()}`);
+    await beat(9, "the double doors hold with the same error", () => has(title(), "DOUBLE DOORS") && has(verdict(), "HOLDS WITH ±5 MM ERROR"), () => `${summary()} | ${verdict()}`);
+    await beat(10, "the flight case", () => has(title(), "8/12") && has(result(), "FITS"), summary);
+    await beat(11, "the aquarium", () => has(title(), "11/12") && has(result(), "FITS"), summary);
+    await beat(12, "the load is swapped on the same route", () => has(title(), "YOUR MOVE") && !has(title(), "AQUARIUM"), summary);
+    await beat(13, "back to the studio sofa", () => has(title(), "1/12") && has(result(), "DOES NOT FIT"), summary);
+    await beat(14, "the door edge is pulled out and the sofa goes through", () => has(title(), "YOUR MOVE") && has(textOf("Param label 1"), "WIDTH 100") && has(result(), "FITS"), () => `${summary()} | ${textOf("Param label 1")}`);
+    await beat(15, "the closing line over the widened door", () => has(title(), "2/12") && has(textOf("Scenario Story"), "before you lift it"), summary);
 
     const end = began + tourSeconds() + 6;
     while (a.touring && getTime() < end) await sleep(250);

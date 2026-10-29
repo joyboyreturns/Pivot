@@ -195,3 +195,22 @@ Scenario 10 at rest shows the new summary line and the detail line, with the "±
 ### Still open
 - The demo tour and `demo-outline.md` do not mention the tolerance result (rewrite was not approved; only the scenario count was corrected to 14). The tour does not play the double-doors tolerance line.
 - Everything under "Still open" in Session 6 stands. Nothing has run on real glasses. Nothing is committed or pushed; making the repo public and submitting remain the owner's decisions.
+
+## Session 8 notes (29 October 2026, 21:30-22:30) - on local branch `demo-polish`
+
+The owner asked for three things (tolerance in the demo, a fix that leaves some spare room, readability). Sessions 7's "Still open" items 1 and 2 above are now done; `main` is at a48011f and holds everything before this section.
+
+### What changed
+1. **Tour shows the tolerance result.** `PivotTour.ts` has 16 beats (161 s, was 156 s; a few holds trimmed so the video fits with a title and the build story): the bench beat now says "Fits by 4 mm, but too close to confirm if the measurements can be 5 mm out", and a new beat tries the double doors ("hold even with that error, 15 cm to spare"). `PivotTourScenario` checks both beats on the verdict line ("TOO CLOSE TO CONFIRM AT ±5 MM", "HOLDS WITH ±5 MM ERROR"). `demo-outline.md` is rewritten with the new timings (tour 2:41, build story 2:41-2:56, total about 2:56).
+2. **Fixes to the room carry a centimetre of margin.** `src/planner/fixes.ts`: `ROOM_MARGIN = 0.01` is added to door, hall, lift and L-turn fixes ("Widen to 86 cm", 1 cm to spare); changes to the object are exact ("5 cm lower" is the sofa's real legs). Fixes are ordered by the least change each needs, with the room first on a tie, so "Fix tag 1" is still the door (the first attempt let "5 cm lower" sort ahead and the tour pinched the wrong fix; the LEAF run caught it). `lengthText` now rounds under 10 mm and switches to cm at 10 ("1 cm", not "10 mm"). Unit tests: 134 (a new one checks that every room fix in every scenario leaves more than 5 mm).
+3. **Readable labels.** `PivotManeuver.ts`: the step label and the at-rest hint sit on a dark translucent plate (a child "Label plate") and stand in front of the ghost's front face instead of inside it (the 2 m wardrobe's hint was completely hidden by its own body; seen in Preview before, readable after). Handle clearance now uses the label's own width instead of a fixed 55 cm, so the width handle no longer covers the end of the double-doors step label (seen in Preview).
+
+### Checks
+`npm test` 134/134, typecheck clean, `npm run sync` (fixes.ts and format.ts). All 14 LEAF scenarios PASSED on the final code (22:02-22:08), 0 failures, no script errors; `pivot-tour` PASSED in 168.7 s. The four Devpost images were retaken on this code.
+
+### Not fixed / not verified
+- On an L-turn the step label can still touch the hall-width handle (seen in image 02); the handle clearance only considers height, and the hall plan lies flat.
+- In life size the step label is still small (unchanged).
+- Tall objects were checked by eye on the wardrobe only (the fridge, bookcase and art crate were not re-viewed). The plate was not tried in a real headset.
+- `README`, `pitch.md` and `ARCHITECTURE` now say 86 cm and 134 tests; the earlier session notes above still quote "85" and "1 MM" for the state at that time.
+- Nothing from this section is committed on `main` or pushed. The rules re-read, the recording and the submission are still the owner's.

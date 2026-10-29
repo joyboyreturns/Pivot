@@ -100,29 +100,53 @@ describe("what would make it fit", () => {
     expect(suggestFixes(sofa, wide)).toEqual([]);
   });
 
-  it("for the 80 cm door: widen to 85, or take 5 cm off the height", () => {
+  it("for the 80 cm door: widen to 86 (1 cm more than the 85 it needs), or take 5 cm off the height", () => {
     const door = scenarioById("studio-sofa")!.gates[1]!;
     const fixes = suggestFixes(sofa, door);
     const widen = fixes.find((f) => f.kind === "widen")!;
     const shrink = fixes.find((f) => f.kind === "shrink" && f.target === "height")!;
-    expect(widen.to).toBeCloseTo(0.85, 2);
+    expect(widen.to).toBeCloseTo(0.86, 2);
     expect(shrink.delta).toBeCloseTo(0.05, 2);
     expect(shrink.label).toContain("legs");
-    // Applying a fix really makes it fit.
-    expect(planGate(sofa, { ...(door as Extract<Gate, { kind: "doorway" }>), width: widen.to }).fits).toBe(true);
+    // Applying a fix really makes it fit, and the widened door fits with room to spare, not touching.
+    const widened = planGate(sofa, { ...(door as Extract<Gate, { kind: "doorway" }>), width: widen.to });
+    expect(widened.fits).toBe(true);
+    expect(widened.clearance).toBeGreaterThan(0.005);
     expect(planGate({ ...sofa, height: shrink.to }, door).fits).toBe(true);
-    expect(fixes.map((f) => f.delta)).toEqual([...fixes.map((f) => f.delta)].sort((a, b) => a - b));
+    // The door comes first (it needs 5 cm more, the same as the legs), whatever margin is added to it; the tour and the tag order rely on it.
+    expect(fixes[0]!.kind).toBe("widen");
+    expect(fixes[1]!.target).toBe("height");
+    // Otherwise ordered by the change each needs, not the margin: a room fix is never behind a smaller change to the object.
+    const needed = fixes.map((f) => (f.kind === "shrink" ? f.delta : f.delta - 0.01));
+    expect(needed).toEqual([...needed].sort((a, b) => a - b));
   });
 
   it("when the door is too narrow and the hall too shallow, asks for both, in that order", () => {
     const front = placeLibrary.find((p) => p.id === "old-flat")!.gates[0]!;
     const fixes = suggestFixes(sofa, front);
     const deepen = fixes.find((f) => f.kind === "deepen")!;
-    expect(deepen.changes.find((c) => c.id === "width")!.value).toBeCloseTo(0.85, 2);
+    expect(deepen.changes.find((c) => c.id === "width")!.value).toBeCloseTo(0.86, 2);
     expect(deepen.to).toBeGreaterThan(2);
     const after = applyFix(sofa, front, deepen);
     expect(planGate(after.box, after.gate).fits).toBe(true);
     expect(fixes.every((fix) => { const after = applyFix(sofa, front, fix); return planGate(after.box, after.gate).fits; })).toBe(true);
+  });
+
+  it("a fix to the room leaves something to spare on every blocked gate of every scenario", () => {
+    let checked = 0;
+    for (const s of scenarios) {
+      for (const gate of s.gates) {
+        for (const fix of suggestFixes(s.box, gate)) {
+          if (fix.kind === "shrink") continue; // changes to the object are exact: legs off is 5 cm
+          const after = applyFix(s.box, gate, fix);
+          const plan = planGate(after.box, after.gate);
+          expect(plan.fits, `${s.id} / ${gate.name} / ${fix.short}`).toBe(true);
+          expect(plan.clearance, `${s.id} / ${gate.name} / ${fix.short}`).toBeGreaterThan(0.005);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(3);
   });
 
   it("for a door that fits but a hall that is too shallow: more room in front", () => {

@@ -9,6 +9,8 @@ const NOISE = 1e-9;
  */
 export function lengthText(metres: number): string {
   const d = Math.abs(metres);
-  if (d >= NOISE && d < 0.01) return `${Math.max(1, Math.round(d * 1000))} mm`;
+  const mm = Math.round(d * 1000);
+  // Under 10 whole millimetres: 9.99 mm is a centimetre, not "10 mm".
+  if (d >= NOISE && mm < 10) return `${Math.max(1, mm)} mm`;
   return `${Math.round(d * 100)} cm`;
 }

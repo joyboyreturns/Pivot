@@ -6,7 +6,9 @@ describe("lengthText", () => {
   it("never turns a positive sub-centimetre margin into 0 cm", () => {
     expect(lengthText(0.004)).toBe("4 mm");
     expect(lengthText(0.0006)).toBe("1 mm");
-    expect(lengthText(0.00999)).toBe("10 mm");
+    expect(lengthText(0.0094)).toBe("9 mm");
+    // Just under a centimetre rounds to one centimetre, not to "10 mm".
+    expect(lengthText(0.00999)).toBe("1 cm");
   });
   it("uses whole centimetres from 1 cm up and ignores the sign", () => {
     expect(lengthText(0.01)).toBe("1 cm");

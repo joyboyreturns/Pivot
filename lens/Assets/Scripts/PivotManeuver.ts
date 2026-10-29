@@ -4,17 +4,28 @@ import { PivotAnalysis } from "./PivotAnalysis";
 import { ObjectModel } from "./PivotObjectModel";
 import { extents, frameAt, gateHandles, maxProgress } from "./Planner/index";
 import { poseTransform } from "./PivotPose";
-import { ARROW_AT, RAIL_AT, RAIL_HALF, lengthText } from "./PivotLayout";
+import { ARROW_AT, MODEL_SCALE, RAIL_AT, RAIL_HALF, lengthText } from "./PivotLayout";
 import type { Frame, Plan } from "./Planner/index";
 
 const CM = 100;
 const RAD = Math.PI / 180;
 const HINT = "PINCH ARROW  •  PULL AN EDGE";
-/** Step label against a gate handle, in room cm: half the label's width plus the handle's, and half their heights plus a margin. */
-const LABEL_REACH = 55;
+/** Step label against a gate handle, in room cm: the label's own half width plus the handle's, and half their heights plus a margin. */
+const HANDLE_HALF = 8;
 const LABEL_CLEAR = 32;
+/** Width of a character and height of a line of the step label at its size, in cm, and the margin the plate leaves round the text. */
+const CHAR_WIDTH = 0.0128 * 32;
+const LINE_HEIGHT = 0.9;
+const PLATE_MARGIN = 0.8;
+
+function labelSize(text: string): { width: number; height: number } {
+  const lines = text.split("\n");
+  return { width: lines.reduce((longest, line) => Math.max(longest, line.length), 0) * CHAR_WIDTH, height: lines.length * LINE_HEIGHT };
+}
 /** The wall panels around a doorway, corridor or lift are 15 cm deep and centred on the gate plane; the label stays in front of them. */
 const LABEL_FRONT = 12;
+/** Room cm between the front face of the ghost and its label. */
+const LABEL_GAP = 4;
 
 @component
 export class PivotManeuver extends BaseScriptComponent {
@@ -36,6 +47,7 @@ export class PivotManeuver extends BaseScriptComponent {
   @input analysis!: PivotAnalysis;
   private originalMaterial!: Material;
   private boxVisual!: RenderMeshVisual;
+  private plate!: SceneObject;
   private activeVisual!: RenderMeshVisual;
   private showingGhost = false;
   private arrowMaterial!: Material;
@@ -104,20 +116,36 @@ export class PivotManeuver extends BaseScriptComponent {
     (this.sofaDimensions.getComponent("Component.Text3D") as Text3D).text = s.boxName.toUpperCase();
   }
 
+  /** Width of the step label as it stands, in room cm (the model is a tenth of the room). */
+  private labelWidth(): number {
+    return labelSize(this.lastLabel).width / MODEL_SCALE;
+  }
+
   /**
-   * The step label is about 70 cm wide in the room and the gate's grab points sit on its jambs and lintel, so a
-   * label centred at a handle's height would cover the handle. Lift it just above any handle it would touch (room cm).
+   * The gate's grab points sit on its jambs and lintel, so a label centred at a handle's height would cover the handle.
+   * Lift it just above any handle its own width would reach (room cm).
    */
   private clearOfHandles(x: number, y: number): number {
     if (this.analysis.isLifeSize) return y;
+    const reach = this.labelWidth() / 2 + HANDLE_HALF;
     const handles = gateHandles(this.analysis.currentGate).map((h) => ({ x: h.at.x * CM, y: h.at.y * CM })).sort((a, b) => a.y - b.y);
-    for (const h of handles) if (Math.abs(h.x - x) < LABEL_REACH && Math.abs(y - h.y) < LABEL_CLEAR) y = h.y + LABEL_CLEAR;
+    for (const h of handles) if (Math.abs(h.x - x) < reach && Math.abs(y - h.y) < LABEL_CLEAR) y = h.y + LABEL_CLEAR;
     return y;
   }
 
-  /** Depth for the step label: at the ghost, but never inside the wall panels, which would hide the text beyond the opening. */
-  private labelDepth(z: number): number {
-    return this.analysis.currentGate.kind === "corner" ? z : Math.max(z, LABEL_FRONT);
+  /** A dark plate behind the label, so white text stays readable over a pale model. */
+  private fitPlate(label: string): void {
+    const size = labelSize(label);
+    this.plate.enabled = label !== "";
+    this.plate.getTransform().setLocalScale(new vec3(size.width + 2 * PLATE_MARGIN, size.height + 2 * PLATE_MARGIN, 0.1));
+  }
+
+  /**
+   * Depth for the step label: just in front of the ghost's front face, so a deep object does not hide its own label,
+   * and never inside the wall panels, which would hide the text beyond the opening. `half` is half the ghost's depth.
+   */
+  private labelDepth(z: number, half: number): number {
+    return this.analysis.currentGate.kind === "corner" ? z : Math.max(z + half + LABEL_GAP, LABEL_FRONT);
   }
 
   private warningText(plan: Plan, step: number): string {
@@ -163,6 +191,16 @@ export class PivotManeuver extends BaseScriptComponent {
       this.boxVisual.mainMaterial = this.bodyMaterial;
       this.objectModel = new ObjectModel(boxObject, this.boxMesh, this.propMaterial, this.ghostMaterial);
       this.activeVisual = this.sofaVisual;
+
+      this.plate = global.scene.createSceneObject("Label plate");
+      this.plate.setParent(this.warning.getSceneObject());
+      const plateVisual = this.plate.createComponent("Component.RenderMeshVisual") as RenderMeshVisual;
+      plateVisual.mesh = this.boxMesh;
+      const plateMaterial = this.ghostMaterial.clone();
+      plateMaterial.mainPass.baseColor = new vec4(0.04, 0.06, 0.08, 0.72);
+      plateVisual.mainMaterial = plateMaterial;
+      this.plate.getTransform().setLocalPosition(new vec3(0, 0, -0.3));
+      this.plate.enabled = false;
 
       const arrowMesh = this.arrowVisual.getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
       const handleMesh = this.handleVisual.getComponent("Component.RenderMeshVisual") as RenderMeshVisual;
@@ -226,9 +264,10 @@ export class PivotManeuver extends BaseScriptComponent {
       this.place(frameAt(plan, this.progress));
       // The step label rides on the ghost it describes.
       const ghost = this.sofa.getTransform().getLocalPosition();
-      const top = extents(this.analysis.scenario.box, frameAt(plan, this.progress).pose).y * 50 + 26;
+      const size = extents(this.analysis.scenario.box, frameAt(plan, this.progress).pose);
+      const top = size.y * 50 + 26;
       const tag = this.warning.getSceneObject().getTransform();
-      const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), this.labelDepth(ghost.z)));
+      const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), this.labelDepth(ghost.z, size.z * 50)));
       if (!this.analysis.isLifeSize) tagPosition.y = Math.min(-5, tagPosition.y);
       tag.setWorldPosition(tagPosition);
       const k = this.analysis.isLifeSize ? 3 : 1;
@@ -240,6 +279,7 @@ export class PivotManeuver extends BaseScriptComponent {
       if (label !== this.lastLabel) {
         this.lastLabel = label;
         this.warning.text = label;
+        this.fitPlate(label);
       }
 
       // The object's handles belong to the object at rest at the start, not to the ghost on its way through.

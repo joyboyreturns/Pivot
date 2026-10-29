@@ -45,17 +45,18 @@ const DOOR_TO = 50;
 let lastDoor = -1;
 
 export const TOUR: Beat[] = [
-  { hold: 15, caption: "Can it get there? PIVOT checks the whole move, not just the doorway.", run: (h) => h.show("studio-sofa") },
-  { hold: 14, caption: "Pinch a fix: widen the door to 85. Re-planned live, and it fits.", run: (h) => h.tryFix() },
+  { hold: 14, caption: "Can it get there? PIVOT checks the whole move, not just the doorway.", run: (h) => h.show("studio-sofa") },
+  { hold: 14, caption: "Pinch a fix: widen the door to 86 (1 cm spare). Re-planned live.", run: (h) => h.tryFix() },
   { hold: 13, caption: "The door fits. The hall does not: no room to turn. A door check says yes.", run: (h) => h.show("narrow-hall") },
   { hold: 14, caption: "Round a corner the sofa swings on its back. Every angle is solved.", run: (h) => h.show("hallway-corner") },
-  { hold: 10, caption: "Pinch Life size to stand at the corner: the same plan at real size.", run: (h) => h.setLifeSize(true) },
+  { hold: 9, caption: "Pinch Life size to stand at the corner: the same plan at real size.", run: (h) => h.setLifeSize(true) },
   { hold: 11, caption: "Lifts too: the door and the cabin both have to clear.", run: (h) => { h.setLifeSize(false); h.show("elevator-wardrobe"); } },
   { hold: 8, caption: "Not only sofas: a gallery crate, blocked at the side entrance.", run: (h) => h.show("gallery-loading") },
   { hold: 12, caption: "Try another route: the same crate clears the loading dock.", run: (h) => h.tryAlternative() },
-  { hold: 11, caption: "A millimetre matters: it fits by 4 mm, and it tells you.", run: (h) => h.show("workshop-bench") },
-  { hold: 7, caption: "A touring flight case: the stage door, then the wings turn.", run: (h) => h.show("backstage-flight-case") },
-  { hold: 7, caption: "Empty glass through a garden gate and a narrow passage.", run: (h) => h.show("aquarium-delivery") },
+  { hold: 12, caption: "Fits by 4 mm, but too close to confirm if the measurements can be 5 mm out.", run: (h) => h.show("workshop-bench") },
+  { hold: 10, caption: "Try another route: the double doors hold even with that error, 15 cm to spare.", run: (h) => h.tryAlternative() },
+  { hold: 6, caption: "A touring flight case: the stage door, then the wings turn.", run: (h) => h.show("backstage-flight-case") },
+  { hold: 6, caption: "Empty glass through a garden gate and a narrow passage.", run: (h) => h.show("aquarium-delivery") },
   { hold: 9, caption: "Swap the load, keep the measured route: a new verdict at once.", run: (h) => h.swapObject() },
   { hold: 4, caption: "Your move: grab an edge and pull. The verdict follows your hand.", run: (h) => { lastDoor = -1; h.show("studio-sofa"); } },
   {
@@ -69,7 +70,7 @@ export const TOUR: Beat[] = [
       h.drag("gate:width", door, 102.5, 0);
     },
   },
-  { hold: 12, caption: "PIVOT: before you lift it, know if it fits.", run: (h) => h.show("widened-door") },
+  { hold: 10, caption: "PIVOT: before you lift it, know if it fits.", run: (h) => h.show("widened-door") },
 ];
 
 /** How long the tour runs, in seconds. */

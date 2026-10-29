@@ -15,7 +15,7 @@ Built for the Learn AR with SPECS challenge.
 - **Route planner.** `planRoute(box, gates)` plans every gate, names the bottleneck, and gives one verdict.
 - **Verified versus unverified.** Tilts and turns are checked against the room in front of the gate (swing depth and ceiling). Where that room was not given, the step is shown as an "Unverified maneuver" and counted. "Verified" means checked against the box model with the measurements given; it is not a guarantee about the real move, and a "no fit" means no pose was found in the search, not that none exists.
 - **Inverse questions.** The smallest doorway a sofa needs, and a fit matrix of furniture against routes.
-- **What would make it fit.** When a gate blocks, PIVOT says the smallest change that works: widen the opening to 85 cm, give the hall 2.3 m, take 5 cm off the height (legs off), widen both halls. It also says how big the object could be: "this route allows up to 104% of this size".
+- **What would make it fit.** When a gate blocks, PIVOT says what would work: widen the opening (the sofa needs 85 cm, and the tag says 86 so it fits with a centimetre to spare), give the hall more room, take 5 cm off the height (legs off), widen both halls. Changes to the room carry a centimetre of margin; changes to the object are exact. It also says how big the object could be: "this route allows up to 104% of this size".
 - **Many objects, many places.** A library of 17 objects and 9 places, and a *Your move* mode where every number (object length, height, depth; door width and height, hall depth, ceiling, lift cabin size, hall widths) can be changed, and routes can have up to three gates of any type.
 - **Twelve scenarios** with story text: studio flat sofa, the same sofa with a 95 cm door, "the door fits but the hall does not", wardrobe by lift, a tight hallway corner, a queen mattress that cannot ride the lift, a wardrobe down a low corridor, backstage equipment, gallery art crates, a workshop bench, an empty aquarium and a delivery crate.
 
@@ -26,7 +26,7 @@ PIVOT is designed to the SPECS design habits, not as a screen in the air:
 - **A move table, not a wall of text.** The room is a 1:10 model on a table about 1.1 m ahead and a little below eye level, inside the glasses' narrow field of view. Pinch **Life size** for the real 1:1 room.
 - **Numbers sit on the thing they describe.** Dimension lines at the gap where the object passes, with the clearance beside them; the step label rides on the ghost; the tightest moment of the move is tinted in the trail.
 - **The whole move at once.** A seven-frame ghost trail shows the path, and the ghost replays it by itself.
-- **Try the fix.** Blocked? Two tags on the model say what would fix it ("Widen to 85 cm", "5 cm lower"). Pinch one and the whole route re-plans with the change.
+- **Try the fix.** Blocked? Two tags on the model say what would fix it ("Widen to 86 cm", "5 cm lower"). Pinch one and the whole route re-plans with the change.
 - **Drag the edges.** Small handles sit on the edges that matter: the sofa's end, top and front, the door's jamb and lintel, the lift's cabin walls, the hall's far end, the L-turn's two halls. Pinch one and pull along its axis: the number appears on it, PIVOT re-plans on every step, and the verdict, trail and fix tags follow. A guide line shows the axis a handle moves on, and the object's handles step aside while the ghost plays the move. Grabbing an edge of a ready-made scenario takes it over, so "what if the door were 10 cm wider?" is one pull.
 - **Few big targets.** Next scenario, Your move, Life size, the next-step arrow and the scrub rail; the route is three tokens along the table edge.
 
@@ -42,7 +42,7 @@ No SPECS device was available. Everything was run in Interactive Preview with mo
 
 ## Status
 
-Planner core and Lens experience working. 131 Vitest tests (`npm test`) and 14 LEAF scenarios (the last full run is recorded in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
+Planner core and Lens experience working. 134 Vitest tests (`npm test`) and 14 LEAF scenarios (the last full run is recorded in `docs/HANDOFF.md`) under `lens/Assets/Scripts/Tests/`. See [`docs/PLAN.md`](docs/PLAN.md) for what is done and what remains.
 
 ## Docs
 

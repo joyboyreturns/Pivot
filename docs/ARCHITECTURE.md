@@ -113,7 +113,7 @@ Interactions use SIK (`TapInteraction`, `DragInteraction`), so they work with th
 
 ## Testing
 
-- Vitest (131 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
+- Vitest (134 tests): geometry, handles, three door sizes, fixtures, fine search, corner solver against the closed form, approach sweeps, elevator and corridor gates, route verdicts, inverse queries, scenario library, choreography.
 - LEAF (14 scenarios in `lens/Assets/Scripts/Tests`): scene and scale, no-fit result and stepping, scrub, scenario switch, gate chips, verified versus unverified, corner turn, box object and lift, hands-free replay, your-move sandbox, dragging handles (door, hall, object, L-turn), the move table (controls and labels inside the field of view, model scale, callouts, trail, life size), and the tour (runs the whole three-minute tour in real time and checks every beat, then checks that a pinch on any control stops it), and tolerance (the bench corner is too close to confirm at ±5 mm, widening the hall by 2 cm flips it, the double doors hold, other scenarios say nothing).
 
 ## Not modelled (cut first)

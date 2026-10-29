@@ -3,6 +3,12 @@ import { planGate } from "./planner";
 import type { Box, Fix, FixChange, Gate, PlanOptions } from "./types";
 
 const QUICK: PlanOptions = { stepDegrees: 30, fineStepDegrees: 0 };
+/**
+ * A change to the room (opening, hall, lift) is suggested with this much more than the exact minimum, so the
+ * result is a fit with something to spare rather than one that touches. Changes to the object are not padded:
+ * "5 cm lower" is what taking a sofa's legs off actually gives.
+ */
+const ROOM_MARGIN = 0.01;
 const cm = (m: number) => `${Math.round(m * 100)} cm`;
 const fits = (box: Box, gate: Gate, options?: PlanOptions) => planGate(box, gate, options).fits;
 
@@ -45,8 +51,11 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
     const from = readParam(g, id);
     if (from === null) return null;
     const test = (x: number, extra?: PlanOptions) => fits(box, withGateParam(g, id, x), { ...opts, ...extra });
-    const to = smallest(from, from + limitGrow, (x) => test(x, QUICK), (x) => test(x));
-    return to === null || to <= from + 1e-9 ? null : { to, gate: withGateParam(g, id, to) };
+    const least = smallest(from, from + limitGrow, (x) => test(x, QUICK), (x) => test(x));
+    if (least === null || least <= from + 1e-9) return null;
+    const padded = Math.round((least + ROOM_MARGIN) * 100) / 100;
+    const to = padded <= from + limitGrow && test(padded) ? padded : least;
+    return { to, gate: withGateParam(g, id, to) };
   };
 
   const push = (kind: Fix["kind"], target: string, from: number, to: number, label: string, short: string, changes: FixChange[]) =>
@@ -81,7 +90,9 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
     const from = Math.min(gate.inWidth, gate.outWidth);
     const widen = (x: number, opts?: PlanOptions) =>
       fits(box, withGateParam(withGateParam(gate, "inWidth", gate.inWidth + (x - from)), "outWidth", gate.outWidth + (x - from)), { ...options, ...opts });
-    const to = smallest(from, from + 2, (x) => widen(x, QUICK), (x) => widen(x));
+    const least = smallest(from, from + 2, (x) => widen(x, QUICK), (x) => widen(x));
+    const padded = least === null ? null : Math.round((least + ROOM_MARGIN) * 100) / 100;
+    const to = padded !== null && padded <= from + 2 && widen(padded) ? padded : least;
     if (to !== null && to > from) {
       const delta = Math.round((to - from) * 100) / 100;
       out.push({
@@ -116,10 +127,13 @@ export function suggestFixes(box: Box, gate: Gate, options: PlanOptions = {}): F
       changes: [{ scope: "box", id, value: to }],
     });
   }
+  // Ordered by the least change each needs, so the margin added to a room fix does not push it behind a change to the
+  // object; on a tie the room comes first.
+  const least = (fix: Fix) => (fix.kind === "shrink" ? fix.delta : fix.delta - ROOM_MARGIN);
   return out.filter((fix) => {
     const after = applyFix(box, gate, fix);
     return planGate(after.box, after.gate, options).fits;
-  }).sort((a, b) => a.delta - b.delta);
+  }).sort((a, b) => least(a) - least(b) || Number(a.kind === "shrink") - Number(b.kind === "shrink"));
 }
 
 function readParam(gate: Gate, id: string): number | null {

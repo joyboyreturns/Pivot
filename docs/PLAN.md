@@ -63,6 +63,7 @@ Target: submit **8 Nov 2026**. The official rules (read on learn-specs.devpost.c
 - [x] Sound cues: two short cues (`lens/Assets/GeneratedSFX/pivot-fit.wav`, `pivot-nofit.wav`) play when a result appears; the chime for a fit, the lower tone for no fit or a fit too close to confirm. Generated algorithmically (no samples). Checked for runtime errors and for which cue is chosen; not listened to by the assistant, so the owner should hear them and the volume (0.6) before recording
 - [x] Capture images: four Preview screenshots in `lens/devpost/images/` (blocked sofa, bench corner "too close to confirm at ±5 mm", double doors holding, life size), taken 29 Oct on the current code. The owner should pick which to upload
 - [x] Devpost description drafted in `lens/devpost/pitch.md` (owner to read, edit and paste)
+- [x] Demo polish (29 Oct, owner approved): the tour now shows the tolerance result (bench "too close to confirm at ±5 mm", then the double doors holding; 161 s), the suggested room fix carries a centimetre of margin ("Widen to 86 cm", 1 cm to spare), and step labels and the at-rest hint sit on a dark plate in front of the object
 - [ ] Record the video (under 3 minutes, public on YouTube): owner
 - Done when: video and images are ready.
 
