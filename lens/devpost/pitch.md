@@ -5,6 +5,9 @@
 ## The problem
 Every AR furniture app asks "does it fit in this spot?". Moving day asks something harder: "can it get there?" A sofa that fits the living room can still jam in the lift, the hall corner or the flat door, and the answer depends on how you turn it and whether you have room to turn it. Nobody finds out until the sofa is stuck on the stairs.
 
+## The one moment
+The doorway looks wide enough. The sofa is 85 cm and the door is 80, or the door is fine and the hall is too shallow to turn it. PIVOT shows the tightest moment of the move before anyone lifts anything, in the space where it happens: a ghost of the object jams (or squeezes through with 6 mm to spare), the limiting gap is marked, and a pinch on a suggested fix replans the whole route so you watch the answer change. Then it says how much to trust the answer: a fit with millimetres to spare reads "too close to confirm" when you state a measurement error, and a different route can hold with room to spare.
+
 ## Who it is for
 Anyone who has to get a big thing through a building: people buying a sofa or a wardrobe, movers, delivery crews, furniture shops, landlords checking whether a flat is practical to furnish.
 
