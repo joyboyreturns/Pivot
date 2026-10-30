@@ -395,7 +395,9 @@ export class PivotAnalysis extends BaseScriptComponent {
     const corner = gate.kind === "corner";
     if (this.lifeSize) {
       stage.setLocalScale(vec3.one());
-      stage.setLocalPosition(corner ? new vec3(45, 25, -300) : vec3.zero());
+      // The plan of a corner is wider than the view; standing it further back and to the right keeps its left end
+      // clear of the control column (its buttons sit about 1.1 m out, at the left of the view).
+      stage.setLocalPosition(corner ? new vec3(75, 25, -450) : vec3.zero());
       stage.setLocalRotation(corner ? quat.angleAxis((62 * Math.PI) / 180, vec3.right()) : quat.quatIdentity());
       return;
     }
