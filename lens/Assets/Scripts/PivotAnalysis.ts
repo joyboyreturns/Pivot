@@ -361,14 +361,19 @@ export class PivotAnalysis extends BaseScriptComponent {
     this.fixes = plan.fits ? [] : suggestFixes(s.box, gate).slice(0, 2);
     this.fixTags.forEach((tag, i) => {
       const fix = this.fixes[i];
-      // A control that has done its job goes away a moment later, never under the pinch that used it.
-      if (fix) {
+      // A control that has done its job goes away a moment later, never under the pinch that used it. At life size
+      // the room fills the view, so the try-the-fix tags stay on the model table (switching size is the wearer's own pinch).
+      const offered = !!fix && !this.lifeSize;
+      if (offered) {
         tag.object.enabled = true;
+        tag.hideAt = 0;
+      } else if (this.lifeSize) {
+        tag.object.enabled = false;
         tag.hideAt = 0;
       } else if (tag.hideAt === 0 && tag.object.enabled) {
         tag.hideAt = getTime() + 0.9;
       }
-      tag.label.getSceneObject().enabled = !!fix;
+      tag.label.getSceneObject().enabled = offered;
       if (fix) tag.label.text = wrap(`${fix.kind === "shrink" ? "TRY: " : "TRY: "}${fix.short.toUpperCase()}`, 16);
     });
 
@@ -398,7 +403,7 @@ export class PivotAnalysis extends BaseScriptComponent {
       // A life-size room is wider than the view; standing it further back and to the right keeps its left end
       // (a corner's hall, a sofa at its start) off the control column, whose buttons sit about 1.1 m out at the
       // left of the view. These are offsets from the scene root, which stands 5 m ahead.
-      stage.setLocalPosition(corner ? new vec3(75, 25, -450) : new vec3(20, 0, -150));
+      stage.setLocalPosition(corner ? new vec3(95, 25, -450) : new vec3(20, 0, -150));
       stage.setLocalRotation(corner ? quat.angleAxis((62 * Math.PI) / 180, vec3.right()) : quat.quatIdentity());
       return;
     }

@@ -268,7 +268,8 @@ export class PivotManeuver extends BaseScriptComponent {
       const top = size.y * 50 + 26;
       const tag = this.warning.getSceneObject().getTransform();
       const tagPosition = this.analysis.stageToWorld(new vec3(ghost.x, this.clearOfHandles(ghost.x, ghost.y + top), this.labelDepth(ghost.z, size.z * 50)));
-      if (!this.analysis.isLifeSize) tagPosition.y = Math.min(-5, tagPosition.y);
+      // A tall ghost would put its label on the headline text; keep it just under the story line (46 cm at life size).
+      tagPosition.y = Math.min(this.analysis.isLifeSize ? 36 : -5, tagPosition.y);
       tag.setWorldPosition(tagPosition);
       const k = this.analysis.isLifeSize ? 3 : 1;
       tag.setLocalScale(new vec3(k, k, k));
